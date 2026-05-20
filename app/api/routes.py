@@ -31,7 +31,7 @@ async def health():
     )
 
     return {
-        "status": "ok"
+        "status": "healthy"
     }
 
 
