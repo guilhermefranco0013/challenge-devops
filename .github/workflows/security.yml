@@ -1,0 +1,30 @@
+name: Security Scan
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  trivy-scan:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+          -t challenge-devops \
+          -f deploy/docker/Dockerfile .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: challenge-devops
+          format: table
+          exit-code: 0
