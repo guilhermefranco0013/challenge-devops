@@ -3,10 +3,10 @@ kind: Deployment
 
 metadata:
   name: challenge-devops
-  namespace: challenge-devops
+  namespace: {{ .Values.namespace }}
 
 spec:
-  replicas: 2
+  replicas: {{ .Values.replicaCount }}
 
   selector:
     matchLabels:
@@ -23,29 +23,19 @@ spec:
 
         - name: challenge-devops
 
-          image: challenge-devops:latest
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 
-          imagePullPolicy: Never
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           ports:
-            - containerPort: 8000
-
-          env:
-            - name: APP_ENV
-              value: production
+            - containerPort: {{ .Values.containerPort }}
 
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
-
-            initialDelaySeconds: 5
-            periodSeconds: 10
+              port: {{ .Values.containerPort }}
 
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
-
-            initialDelaySeconds: 10
-            periodSeconds: 15
+              port: {{ .Values.containerPort }}
