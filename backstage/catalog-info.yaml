@@ -1,0 +1,38 @@
+apiVersion: backstage.io/v1alpha1
+
+kind: Component
+
+metadata:
+  name: challenge-devops
+  title: Challenge DevOps API
+
+  description: >
+    Cloud-native FastAPI service demonstrating
+    containerization, Kubernetes deployment,
+    CI/CD automation, and observability practices.
+
+  tags:
+    - python
+    - fastapi
+    - kubernetes
+    - helm
+    - observability
+
+  annotations:
+    backstage.io/source-location: url:https://github.com/guilhermefranco0013/challenge-devops
+
+  links:
+    - url: https://github.com/guilhermefranco0013/challenge-devops
+      title: GitHub Repository
+
+    - url: https://github.com/guilhermefranco0013/challenge-devops/actions
+      title: GitHub Actions
+
+spec:
+  type: service
+  lifecycle: experimental
+  owner: platform-team
+  system: challenge-devops-system
+
+  providesApis:
+    - challenge-devops-api

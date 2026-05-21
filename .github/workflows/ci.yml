@@ -29,11 +29,17 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
+          pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Validate application
         run: |
           python --version
+
+      - name: Run tests
+        run: |
+          cd app
+          pytest -q
 
       - name: Build Docker image
         run: |

@@ -1,0 +1,28 @@
+# Requires an ingress controller such as ingress-nginx
+# to expose the application externally.
+
+apiVersion: networking.k8s.io/v1
+
+kind: Ingress
+
+metadata:
+  name: challenge-devops-ingress
+  namespace: challenge-devops
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+    - host: challenge-devops.local
+
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+
+            backend:
+              service:
+                name: challenge-devops-service
+
+                port:
+                  number: 80
