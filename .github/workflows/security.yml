@@ -28,3 +28,5 @@ jobs:
           image-ref: challenge-devops
           format: table
           exit-code: 0
+
+          #test
