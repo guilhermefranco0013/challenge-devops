@@ -1,4 +1,5 @@
 apiVersion: v2
+
 name: challenge-devops
 description: A Helm chart for Kubernetes
 

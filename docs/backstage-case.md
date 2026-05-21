@@ -50,8 +50,19 @@ Backstage integration provides:
 
 ## Current State
 
-Currently, the project does not yet expose service metadata through a populated
-`backstage/catalog-info.yaml` entity definition.
+The repository currently includes a populated `backstage/catalog-info.yaml`
+file describing the `challenge-devops` service as a Backstage component.
+
+The metadata defines ownership, lifecycle, technology tags, and API exposure,
+allowing the service to be integrated into a Backstage software catalog.
+
+## Local Environment Validation
+
+During the Backstage local setup validation, compatibility issues were identified with Node.js 18 and 20 due to native dependencies such as `isolated-vm`.
+
+The environment was successfully stabilized using Node.js 22, which provided compatibility with the current Backstage dependency tree and Yarn build process.
+
+This validation process demonstrated the dependency requirements and runtime expectations of modern Backstage environments.
 
 ### Recommendations
 

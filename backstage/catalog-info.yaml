@@ -20,6 +20,7 @@ metadata:
 
   annotations:
     backstage.io/source-location: url:https://github.com/guilhermefranco0013/challenge-devops
+    github.com/project-slug: guilhermefranco0013/challenge-devops
 
   links:
     - url: https://github.com/guilhermefranco0013/challenge-devops
@@ -34,5 +35,3 @@ spec:
   owner: platform-team
   system: challenge-devops-system
 
-  providesApis:
-    - challenge-devops-api

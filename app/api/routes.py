@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from prometheus_client import generate_latest
 from starlette.responses import Response
 
-from observability.logging import logger
-from observability.metrics import REQUEST_COUNTER
+from app.observability.logging import logger
+from app.observability.metrics import REQUEST_COUNTER
 
 router = APIRouter()
 
@@ -31,7 +31,7 @@ async def health():
     )
 
     return {
-        "status": "healthy"
+        "status": "ok"
     }
 
 

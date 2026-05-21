@@ -30,15 +30,14 @@ jobs:
         run: |
           cd app
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
 
-      - name: Validate application
+      - name: Validate application imports
         run: |
-          python --version
+          python -c "from app.main import app"
 
       - name: Run tests
         run: |
-          cd app
           pytest -q
 
       - name: Build Docker image
