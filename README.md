@@ -31,6 +31,7 @@ Antes de iniciar, instale:
 - pip
 - Docker
 - Docker Compose
+- Kind (para Kubernetes local)
 - kubectl
 - Helm 3
 - Git
@@ -631,6 +632,20 @@ O projeto utiliza:
 - Pytest.
 
 ---
+
+# Decisões Técnicas
+
+As principais decisões técnicas do projeto foram:
+
+- utilização de FastAPI devido à leveza, tipagem moderna e integração simples com ASGI;
+- utilização de Docker multi-stage build para separar dependências de build e runtime da aplicação, permitindo imagens menores, mais seguras e com menor overhead operacional em ambientes Kubernetes;
+- utilização de Kubernetes para simular ambiente cloud-native e orquestração distribuída;
+- utilização de Helm para gerenciamento declarativo e parametrização dos manifests Kubernetes;
+- utilização de Prometheus e Grafana para observabilidade baseada em métricas;
+- utilização de Structlog para logging estruturado em JSON;
+- utilização de Trivy para validação de vulnerabilidades da imagem Docker;
+- utilização de Backstage para demonstração de catálogo de serviços e platform engineering;
+- centralização operacional via Makefile para simplificar workflows de desenvolvimento e troubleshooting.
 
 # Observações finais
 

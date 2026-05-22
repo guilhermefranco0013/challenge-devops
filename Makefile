@@ -234,7 +234,7 @@ kube-debug:
 	@echo ""
 
 	@echo "========== NODE =========="
-	kubectl get nodes
+	kubectl get nodes -A
 	@echo ""
 
 	@echo "========== EVENTS =========="
