@@ -1,32 +1,84 @@
-# Backstage Integration
+# Integração com Backstage
 
-## Purpose
+## Visão geral
 
-The `backstage/catalog-info.yaml` file should contain metadata for Backstage, enabling the application to be discovered, documented, and managed in a central catalog.
+O projeto `challenge-devops` possui integração com o Backstage utilizando o arquivo:
 
-## Expected Structure
+```text
+backstage/catalog-info.yaml
+```
 
-A typical Backstage catalog entry includes:
+O objetivo da integração é centralizar metadados operacionais, documentação técnica e informações de implantação em um catálogo unificado de serviços.
 
-- `apiVersion`: Backstage API version.
-- `kind`: entity type, such as `Component`.
-- `metadata`: name, description, tags, and owner.
-- `spec`: details for `type`, `lifecycle`, `owner`, `system`, `implementsApis`, and `providesApis`.
+A integração com o Backstage permite que a aplicação seja descoberta, documentada e gerenciada de forma padronizada dentro de uma plataforma de engenharia interna.
 
-## Project Usage
+---
 
-In this repository, the Backstage catalog should document:
+# Objetivos da integração
 
-- the `challenge-devops` service as a backend component;
-- the Git repository as the component source;
-- the GitHub URL and CI/CD pipeline references;
-- deployment information for Kubernetes/Helm;
-- technology tags like `python`, `fastapi`, `kubernetes`, `helm`, and `observability`.
+A integração com o Backstage foi implementada para:
 
-## Backstage Integration Flow
+- centralizar informações operacionais do serviço;
+- melhorar a descoberta de aplicações;
+- padronizar metadados técnicos;
+- integrar documentação, CI/CD e deployment;
+- consolidar informações de Kubernetes e Helm;
+- demonstrar práticas de Platform Engineering;
+- facilitar governança e ownership de serviços.
+
+---
+
+# Estrutura esperada do catalog-info.yaml
+
+O arquivo `catalog-info.yaml` deve conter metadados estruturados para o catálogo Backstage.
+
+Uma entidade típica inclui:
+
+| Campo | Descrição |
+|---|---|
+| `apiVersion` | Versão da API do Backstage |
+| `kind` | Tipo da entidade, como `Component` |
+| `metadata` | Nome, descrição, tags e owner |
+| `spec` | Tipo do serviço, lifecycle, owner e APIs |
+
+---
+
+# Uso no projeto
+
+Neste repositório, o catálogo Backstage documenta:
+
+- o serviço `challenge-devops` como um componente backend;
+- o repositório GitHub como origem do componente;
+- referências para CI/CD via GitHub Actions;
+- manifests Kubernetes e charts Helm;
+- metadados operacionais da aplicação;
+- tags tecnológicas como:
+  - `python`
+  - `fastapi`
+  - `kubernetes`
+  - `helm`
+  - `observability`
+
+---
+
+# Estrutura da entidade Backstage
+
+O componente foi registrado utilizando:
+
+```yaml
+kind: Component
+type: service
+lifecycle: experimental
+owner: platform-team
+```
+
+---
+
+# Fluxo de integração
 
 ```mermaid
 flowchart LR
+
     Developer[Developer] --> Repo[GitHub Repository]
 
     Repo --> Catalog[catalog-info.yaml]
@@ -40,33 +92,161 @@ flowchart LR
     Backstage --> Observability[Grafana Dashboards]
 ```
 
-## Operational Value
+---
 
-Backstage integration provides:
+# Valor operacional
 
-- faster service discovery and dependency visibility;
-- clear operational guidance for development and operations teams;
-- direct links to documentation, pipelines, and deployment manifests.
+A integração com o Backstage fornece:
 
-## Current State
+- descoberta centralizada de serviços;
+- visibilidade de dependências;
+- padronização de ownership;
+- rastreabilidade operacional;
+- acesso rápido à documentação;
+- integração com pipelines CI/CD;
+- acesso centralizado a recursos Kubernetes e Helm;
+- visibilidade de dashboards e observabilidade.
 
-The repository currently includes a populated `backstage/catalog-info.yaml`
-file describing the `challenge-devops` service as a Backstage component.
+---
 
-The metadata defines ownership, lifecycle, technology tags, and API exposure,
-allowing the service to be integrated into a Backstage software catalog.
+# Estado atual da integração
 
-## Local Environment Validation
+O repositório atualmente possui um arquivo:
 
-During the Backstage local setup validation, compatibility issues were identified with Node.js 18 and 20 due to native dependencies such as `isolated-vm`.
+```text
+backstage/catalog-info.yaml
+```
 
-The environment was successfully stabilized using Node.js 22, which provided compatibility with the current Backstage dependency tree and Yarn build process.
+preenchido com os metadados do serviço `challenge-devops`.
 
-This validation process demonstrated the dependency requirements and runtime expectations of modern Backstage environments.
+A entidade registrada define:
 
-### Recommendations
+- ownership;
+- lifecycle;
+- tags tecnológicas;
+- exposição de APIs;
+- informações operacionais.
 
-- populate `backstage/catalog-info.yaml` with a `Component` entity for `challenge-devops`.
-- link the component to Kubernetes manifests, Helm charts, CI/CD pipelines, and operational documentation.
-- include documentation for `owner`, `lifecycle`, and `system`.
-- keep the file versioned alongside the service code.
+Isso permite que o serviço seja integrado diretamente ao catálogo Backstage.
+
+---
+
+# Validação do ambiente local
+
+Durante a validação do ambiente Backstage local, foram identificados problemas de compatibilidade utilizando:
+
+- Node.js 18;
+- Node.js 20.
+
+As incompatibilidades ocorreram devido a dependências nativas, principalmente:
+
+```text
+isolated-vm
+```
+
+O ambiente foi estabilizado com sucesso utilizando:
+
+```text
+Node.js 22
+```
+
+Essa versão apresentou compatibilidade adequada com:
+
+- dependências atuais do Backstage;
+- build do Yarn;
+- runtime local da plataforma.
+
+---
+
+# Execução local do Backstage
+
+## Instalar dependências
+
+```bash
+yarn install
+```
+
+---
+
+## Executar ambiente local
+
+```bash
+yarn start
+```
+
+---
+
+# URLs locais
+
+## Frontend
+
+```text
+http://localhost:3001
+```
+
+---
+
+## Backend
+
+```text
+http://localhost:7008
+```
+
+---
+
+# Recomendações operacionais
+
+Recomenda-se:
+
+- manter o `catalog-info.yaml` versionado junto ao código da aplicação;
+- documentar ownership e lifecycle do serviço;
+- vincular manifests Kubernetes e charts Helm;
+- integrar pipelines GitHub Actions;
+- manter tags tecnológicas atualizadas;
+- incluir documentação operacional da aplicação;
+- padronizar entidades Backstage para todos os serviços da plataforma.
+
+---
+
+# Benefícios da abordagem
+
+A utilização do Backstage neste projeto demonstra:
+
+- práticas modernas de Platform Engineering;
+- centralização de metadados operacionais;
+- melhoria na experiência do desenvolvedor;
+- padronização de serviços;
+- integração entre documentação, CI/CD e infraestrutura;
+- aumento de visibilidade operacional em ambientes Kubernetes.
+
+---
+
+# Tecnologias integradas
+
+O componente Backstage referencia tecnologias como:
+
+- Python;
+- FastAPI;
+- Docker;
+- Kubernetes;
+- Helm;
+- Prometheus;
+- Grafana;
+- GitHub Actions;
+- Observabilidade;
+- DevSecOps.
+
+---
+
+# Objetivo arquitetural
+
+A integração foi projetada para consolidar:
+
+- documentação técnica;
+- recursos Kubernetes;
+- deployment Helm;
+- pipelines CI/CD;
+- observabilidade;
+- ownership operacional;
+
+em um único portal centralizado para engenharia de plataforma.

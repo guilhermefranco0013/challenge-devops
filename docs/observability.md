@@ -1,32 +1,55 @@
-# Observability
+# Observabilidade — Challenge DevOps API
 
-## Prometheus Metrics
+## Visão geral
 
-The application exposes Prometheus metrics through the `/metrics` endpoint in `app/api/routes.py`.
+O projeto `challenge-devops` implementa uma arquitetura de observabilidade baseada em:
 
-The primary metric is:
+- métricas Prometheus;
+- dashboards Grafana;
+- logging estruturado em JSON;
+- healthchecks operacionais;
+- integração Kubernetes.
 
-- `app_requests_total`: total request count for the `/` endpoint.
+O objetivo é fornecer:
 
-The metrics implementation lives in `app/observability/metrics.py`.
+- monitoramento operacional;
+- troubleshooting;
+- visibilidade da aplicação;
+- coleta de métricas runtime;
+- análise de comportamento da API.
 
-## Prometheus Configuration
+---
 
-The scrape configuration is defined in `monitoring/prometheus/prometheus.yml`.
+# Arquitetura de observabilidade
 
-The configured job is:
+A stack observável do projeto utiliza:
 
-- `job_name: challenge-devops`
-- `metrics_path: /metrics`
-- `static_configs` with `targets: [172.17.0.1:8082]`
+| Ferramenta | Objetivo |
+|---|---|
+| Prometheus | Coleta de métricas |
+| Grafana | Dashboards e visualização |
+| Structlog | Logging estruturado |
+| FastAPI | Exposição de métricas e healthchecks |
 
-The current Prometheus target uses local Docker bridge networking
-to access the Kubernetes port-forwarded application endpoint during local validation.
+---
 
-## Observability Flow
+# Estrutura de observabilidade
+
+Os componentes estão organizados em:
+
+```text
+app/observability/
+monitoring/prometheus/
+monitoring/grafana/
+```
+
+---
+
+# Fluxo de observabilidade
 
 ```mermaid
 flowchart LR
+
     Client[HTTP Client] --> FastAPI[FastAPI Application]
 
     FastAPI --> Metrics[/metrics Endpoint]
@@ -38,32 +61,476 @@ flowchart LR
     FastAPI --> Logs[Structured JSON Logs]
 ```
 
-### Note
+---
 
-The current target does not directly match the Kubernetes service defined in the project and should be adjusted to the actual application endpoint or service discovery mechanism.
+# Métricas Prometheus
 
-## Grafana Dashboard
+## Visão geral
 
-The Grafana dashboard is versioned in `monitoring/grafana/dashboards/challenge-devops-observability-dashboard.json` and can be imported manually into Grafana environments.
+A aplicação expõe métricas Prometheus através do endpoint:
 
-The dashboard includes panels for:
+```text
+/metrics
+```
 
-- HTTP requests (`app_requests_total`)
-- Open file descriptors (`process_open_fds`)
-- CPU and memory runtime metrics
+implementado em:
 
-Grafana uses Prometheus as its primary datasource to visualize application and runtime metrics, including HTTP requests, CPU usage, memory consumption, and process-level telemetry.
+```text
+app/api/routes.py
+```
 
-## Logging
+---
 
-The project uses `structlog` in `app/observability/logging.py` to produce structured JSON logs.
+# Implementação das métricas
 
-Structured logs are emitted during request handling to support operational visibility and troubleshooting.
+As métricas são definidas em:
 
-## Deployment Observability
+```text
+app/observability/metrics.py
+```
 
-Future improvements for a production-grade observability stack may include:
+---
 
-- align the Prometheus target with the actual application service;
-- provision the Grafana dashboard automatically;
-- add additional metrics for latency, error rates, and environment health as the application scales.
+# Métrica principal
+
+Atualmente o projeto utiliza:
+
+```text
+app_requests_total
+```
+
+para contabilizar requisições HTTP da aplicação.
+
+---
+
+# Exemplo de implementação
+
+```python
+REQUEST_COUNTER.inc()
+```
+
+---
+
+# Exemplo de métrica exportada
+
+```text
+# HELP app_requests_total Total requests
+# TYPE app_requests_total counter
+
+app_requests_total 10.0
+```
+
+---
+
+# Endpoint de métricas
+
+O endpoint responsável pela exposição Prometheus:
+
+```python
+@router.get("/metrics")
+async def metrics():
+
+    return Response(
+        generate_latest(),
+        media_type="text/plain"
+    )
+```
+
+---
+
+# Validação local
+
+## Executar aplicação
+
+```bash
+make run
+```
+
+---
+
+## Verificar endpoint de métricas
+
+```bash
+curl localhost:8000/metrics
+```
+
+---
+
+# Prometheus
+
+## Visão geral
+
+O Prometheus foi configurado para coletar métricas da aplicação utilizando scraping HTTP.
+
+A configuração está localizada em:
+
+```text
+monitoring/prometheus/prometheus.yml
+```
+
+---
+
+# Configuração atual
+
+## Job configurado
+
+```yaml
+job_name: challenge-devops
+```
+
+---
+
+## Endpoint de métricas
+
+```yaml
+metrics_path: /metrics
+```
+
+---
+
+## Target atual
+
+```yaml
+targets:
+  - 172.17.0.1:8082
+```
+
+---
+
+# Observação importante
+
+O target atual utiliza:
+
+```text
+Docker Bridge Networking
+```
+
+para acessar localmente a aplicação Kubernetes exposta via:
+
+```text
+kubectl port-forward
+```
+
+durante validações locais.
+
+---
+
+# Fluxo operacional atual
+
+```text
+Prometheus
+     ↓
+172.17.0.1:8082
+     ↓
+kubectl port-forward
+     ↓
+Kubernetes Service :80
+     ↓
+Pod :8000
+     ↓
+FastAPI
+```
+
+---
+
+# Melhorias recomendadas
+
+O target atual ainda depende de configuração manual/local.
+
+Em ambientes produtivos recomenda-se:
+
+- Kubernetes Service Discovery;
+- Prometheus Operator;
+- ServiceMonitor;
+- DNS interno Kubernetes;
+- Ingress observável.
+
+---
+
+# Grafana
+
+## Visão geral
+
+O Grafana é utilizado para visualização das métricas Prometheus.
+
+Os dashboards estão versionados no repositório em:
+
+```text
+monitoring/grafana/dashboards/
+```
+
+---
+
+# Dashboard principal
+
+```text
+challenge-devops-observability-dashboard.json
+```
+
+---
+
+# Métricas visualizadas
+
+O dashboard atualmente inclui:
+
+| Métrica | Objetivo |
+|---|---|
+| `app_requests_total` | Total de requisições HTTP |
+| `process_open_fds` | File descriptors abertos |
+| CPU runtime metrics | Uso de CPU |
+| Memory runtime metrics | Uso de memória |
+
+---
+
+# Integração Prometheus → Grafana
+
+O Grafana utiliza o Prometheus como datasource principal para:
+
+- métricas HTTP;
+- métricas runtime;
+- métricas de processo;
+- telemetria operacional.
+
+---
+
+# Serviços locais
+
+| Serviço | Porta |
+|---|---|
+| FastAPI | `8000` |
+| Prometheus | `9090` |
+| Grafana | `3000` |
+
+---
+
+# Acesso local
+
+## Prometheus
+
+```text
+http://localhost:9090
+```
+
+---
+
+## Grafana
+
+```text
+http://localhost:3000
+```
+
+---
+
+# Docker Compose observável
+
+A stack local observável é executada via:
+
+```bash
+make compose-up
+```
+
+---
+
+# Comando manual equivalente
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml up --build -d
+```
+
+---
+
+# Logging estruturado
+
+## Visão geral
+
+O projeto utiliza:
+
+```text
+Structlog
+```
+
+para geração de logs estruturados em JSON.
+
+A configuração está localizada em:
+
+```text
+app/observability/logging.py
+```
+
+---
+
+# Objetivos do logging
+
+O logging estruturado foi implementado para:
+
+- troubleshooting;
+- observabilidade;
+- integração Kubernetes;
+- integração Loki/Grafana;
+- padronização cloud-native.
+
+---
+
+# Fluxo de logs
+
+```text
+FastAPI
+   ↓
+Structlog
+   ↓
+stdout/stderr
+   ↓
+Docker
+   ↓
+Kubernetes
+   ↓
+kubectl logs
+```
+
+---
+
+# Exemplo de log estruturado
+
+```json
+{
+  "event": "healthcheck_called",
+  "level": "info",
+  "timestamp": "2026-05-22T20:00:00Z"
+}
+```
+
+---
+
+# Visualização de logs Kubernetes
+
+## Via Makefile
+
+```bash
+make kube-logs
+```
+
+---
+
+## Comando manual equivalente
+
+```bash
+kubectl logs -f deployment/challenge-devops -n challenge-devops
+```
+
+---
+
+# Healthchecks
+
+## Endpoint operacional
+
+A aplicação expõe:
+
+```text
+/health
+```
+
+para:
+
+- readinessProbe;
+- livenessProbe;
+- monitoramento;
+- validação operacional.
+
+---
+
+# Exemplo de resposta
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+# Fluxo observável completo
+
+```mermaid
+flowchart LR
+
+    Client[HTTP Client]
+
+    Client --> FastAPI[FastAPI]
+
+    FastAPI --> Metrics[Prometheus Metrics]
+
+    FastAPI --> Logs[Structlog JSON Logs]
+
+    Metrics --> Prometheus[Prometheus]
+
+    Prometheus --> Grafana[Grafana]
+
+    Logs --> Kubernetes[Kubernetes Logs]
+```
+
+---
+
+# Recursos observáveis implementados
+
+## Atualmente o projeto já possui
+
+- endpoint `/metrics`;
+- endpoint `/health`;
+- Prometheus scraping;
+- dashboards Grafana;
+- logging estruturado;
+- métricas runtime;
+- observabilidade Docker Compose;
+- observabilidade Kubernetes.
+
+---
+
+# Melhorias futuras recomendadas
+
+Adicionar:
+
+- Loki;
+- Promtail;
+- OpenTelemetry;
+- tracing distribuído;
+- alertas Grafana;
+- provisioning automático;
+- ServiceMonitor Kubernetes;
+- métricas de latência;
+- métricas de erro;
+- SLO/SLI.
+
+---
+
+# Objetivos futuros de maturidade
+
+Evoluir a stack para:
+
+- observabilidade enterprise-grade;
+- telemetria distribuída;
+- troubleshooting avançado;
+- monitoramento Kubernetes nativo;
+- integração GitOps.
+
+---
+
+# Conclusão técnica
+
+A arquitetura de observabilidade atual demonstra práticas modernas alinhadas com:
+
+- DevOps;
+- SRE;
+- Cloud-Native;
+- Kubernetes;
+- Platform Engineering.
+
+O projeto já implementa:
+
+- métricas Prometheus;
+- dashboards Grafana;
+- logging estruturado;
+- integração Kubernetes;
+- healthchecks operacionais;
+- monitoramento básico da aplicação.
+
+A solução fornece uma base sólida para evolução futura da stack observável em ambientes produtivos.

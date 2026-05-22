@@ -1,15 +1,31 @@
 # Challenge DevOps API
 
-Este repositório contém um pequeno serviço FastAPI construído como um desafio DevOps. O objetivo é demonstrar:
+Este repositório contém um pequeno serviço desenvolvido com FastAPI como parte de um desafio DevOps. O projeto foi estruturado para demonstrar práticas modernas de desenvolvimento, observabilidade, containerização, automação e orquestração utilizando ferramentas amplamente adotadas em ambientes cloud-native.
 
-- execução local em Python
-- containerização com Docker
-- orquestração com Docker Compose e Kubernetes
-- implantação parametrizada com Helm
-- observabilidade com Prometheus e Grafana
-- fluxo de qualidade com `Makefile`, `ruff`, `black` e `pre-commit`
+---
 
-## Requisitos
+# Objetivos do projeto
+
+O projeto demonstra:
+
+- execução local em Python;
+- containerização com Docker;
+- orquestração com Docker Compose e Kubernetes;
+- gerenciamento declarativo com Helm;
+- observabilidade com Prometheus e Grafana;
+- logging estruturado com Structlog;
+- métricas Prometheus;
+- automação operacional com Makefile;
+- validação de qualidade com Ruff, Black e Pre-Commit;
+- análise de vulnerabilidades com Trivy;
+- integração CI/CD com GitHub Actions;
+- integração de catálogo com Backstage.
+
+---
+
+# Requisitos
+
+Antes de iniciar, instale:
 
 - Python 3.12+
 - pip
@@ -18,346 +34,13 @@ Este repositório contém um pequeno serviço FastAPI construído como um desafi
 - kubectl
 - Helm 3
 - Git
+- Trivy
+- Node.js 22+ (para Backstage)
+- Yarn
 
-## Fluxo de desenvolvimento
+---
 
-### 1. Criar ambiente e instalar ferramentas
-
-```bash
-make dev-setup
-```
-
-Esse target cria `app/.venv` e instala as ferramentas de desenvolvimento necessárias:
-- `ruff`
-- `black`
-- `pre-commit`
-
-### 2. Formatar o código
-
-```bash
-make fmt
-```
-
-### 3. Fazer análise estática
-
-```bash
-make lint
-```
-
-### 4. Instalar hooks de commit
-
-```bash
-make precommit-install
-```
-
-### 5. Executar todos os hooks manualmente
-
-```bash
-make precommit-run
-```
-
-## Comandos principais do Makefile
-
-```bash
-make help
-make install
-make test
-make validate
-make run
-make docker-build
-make docker-run
-make compose-up
-make compose-down
-make kube-apply
-make helm-install
-make kube-port-forward
-make check
-make trivy
-make helm-lint
-make helm-template
-```
-
-## Execução local em Python
-
-```bash
-make install
-make run
-```
-
-Ou diretamente:
-
-```bash
-cd app
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-A aplicação fica disponível em `http://localhost:8000`.
-
-## Docker
-
-```bash
-make docker-build
-make docker-run
-```
-
-## Docker Compose
-
-```bash
-make compose-up
-make compose-logs
-make compose-down
-```
-
-## Kubernetes
-
-### Aplicar manifests
-
-```bash
-make kube-apply
-```
-
-### Fazer port-forward para expor a aplicação em 8082
-
-```bash
-make kube-port-forward
-```
-
-### Instalar via Helm
-
-```bash
-make helm-install
-make helm-upgrade
-```
-
-## Observabilidade
-
-A aplicação expõe métricas em `/metrics` e health check em `/health`.
-
-O endpoint de métricas é implementado em `app/api/routes.py`:
-
-```python
-@router.get("/metrics")
-async def metrics():
-    return Response(
-        generate_latest(),
-        media_type="text/plain"
-    )
-```
-
-### Prometheus Dashboard
-
-![Grafana Dashboard](docs/images/prometheus-targets.png)
-
-### Grafana Dashboard
-
-![Grafana Dashboard](docs/images/grafana-dashboard.png)
-
-O contador principal está definido em `app/observability/metrics.py` e é incrementado no endpoint `/`.
-
-## Security Scanning
-
-Container image vulnerability scanning is implemented using Trivy to validate the security posture of the generated Docker image.
-
-The security workflow is integrated into both:
-
-- local development workflows through the `Makefile`;
-- automated CI validation through GitHub Actions.
-
-### Trivy Validation Targets
-
-Run a local vulnerability scan:
-
-```bash
-make trivy
-```
-
-Run a strict scan that fails on `HIGH` and `CRITICAL` vulnerabilities:
-
-```bash
-make trivy FAIL_ON_VULNS=true
-```
-
-Equivalent direct Trivy command:
-
-```bash
-trivy image \
-  --no-progress \
-  --severity HIGH,CRITICAL \
-  challenge-devops
-```
-
-## CI/CD
-
-The repository uses GitHub Actions to automate validation and quality assurance workflows.
-
-The CI/CD pipeline validates the application during pushes and pull requests targeting the `main` branch.
-
-### Automated Pipeline Stages
-
-The pipeline currently performs:
-
-- Python dependency installation;
-- application import validation;
-- automated pytest execution;
-- Ruff lint validation;
-- Black formatting validation;
-- Docker image build validation;
-- Trivy container vulnerability scanning.
-
-### GitHub Actions Workflow
-
-The main workflow is defined in:
-
-```text
-.github/workflows/ci.yml
-```
-
-### Full Validation Workflow
-
-```bash
-make check
-```
-
-Run the complete validation workflow in strict mode:
-
-```bash
-make check STRICT=true
-```
-
-### CI/CD Goals
-
-The pipeline was designed to:
-
-- validate application integrity before deployment;
-- standardize development workflows;
-- reduce manual validation steps;
-- improve code quality and operational consistency;
-- integrate DevSecOps validation into the development lifecycle.
-
-## Backstage Integration
-
-The project includes Backstage catalog integration using `catalog-info.yaml`.
-
-The service was registered in a local Backstage software catalog to demonstrate platform engineering and service catalog capabilities.
-
-The integration enables:
-
-- centralized service discovery;
-- metadata standardization;
-- ownership and lifecycle management;
-- integration with GitHub repositories and CI/CD pipelines;
-- visibility for Kubernetes and Helm deployment assets.
-
-### Backstage Catalog Metadata
-
-The Backstage entity defines:
-
-- `kind: Component`
-- `type: service`
-- `lifecycle: experimental`
-- `owner: platform-team`
-
-### Catalog Entity Definition
-
-The catalog metadata is defined in:
-
-```text
-backstage/catalog-info.yaml
-```
-
-### Registered Technologies
-
-The component includes metadata tags for:
-
-- Python
-- FastAPI
-- Kubernetes
-- Helm
-- Observability
-
-### Backstage Runtime Validation
-
-During local Backstage setup validation, compatibility issues were identified with Node.js 18 and 20 due to native dependencies such as 'isolated-vm'.
-
-The local Backstage environment was successfully stabilized using Node.js 22
-
-### Backstage Local Execution
-
-Run the Backstage platform locally:
-
-```bash
-yarn start
-```
-
-The Backstage frontend is exposed on:
-
-```text
-http://localhost:3001
-```
-
-The Backstage backend API is exposed on:
-
-```text
-http://localhost:7008
-```
-
-```mermaid
-flowchart LR
-
-    Developer[Developer] --> Repo[GitHub Repository]
-
-    Repo --> Catalog[catalog-info.yaml]
-
-    Catalog --> Backstage[Backstage Catalog]
-
-    Backstage --> Docs[Documentation]
-    Backstage --> CICD[GitHub Actions]
-    Backstage --> K8s[Kubernetes Manifests]
-    Backstage --> Helm[Helm Charts]
-    Backstage --> Observability[Grafana Dashboards]
-```
-
-### Backstage Catalog
-
-![Backstage Catalog](docs/images/backstage-catalog.png)
-
-### Registered Service Component
-
-![Backstage Component](docs/images/backstage-component.png)
-
-### Integration Goals
-
-The Backstage integration was implemented to:
-
-- demonstrate platform engineering practices;
-- centralize operational metadata;
-- improve service discoverability;
-- standardize software catalog management;
-- integrate documentation, CI/CD, Kubernetes, and observability resources into a single developer portal.
-
-## Qualidade de código
-
-O arquivo `.pre-commit-config.yaml` foi adicionado para garantir estilo e lint antes do commit:
-
-```yaml
-repos:
-  - repo: https://github.com/psf/black
-    rev: 24.11.0
-    hooks:
-      - id: black
-        language_version: python3
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.261
-    hooks:
-      - id: ruff
-        args: ["check", "app", "app/tests"]
-```
-
-## Estrutura do projeto
+# Estrutura do projeto
 
 ```text
 app/
@@ -380,8 +63,578 @@ docs/
 .github/
 ```
 
-## Observações
+---
 
-- A documentação foi atualizada para refletir os novos comandos e configurações.
-- O objetivo do `Makefile` é reduzir repetição e tornar o fluxo de desenvolvimento mais profissional.
-- Ferramentas como `black`, `ruff` e `pre-commit` ajudam na consistência sem alterar o comportamento do aplicativo em runtime.
+# Arquitetura
+
+O projeto utiliza:
+
+- FastAPI para exposição da API REST;
+- Uvicorn como servidor ASGI;
+- Structlog para logging estruturado em JSON;
+- Prometheus para coleta de métricas;
+- Grafana para dashboards e observabilidade;
+- Docker para containerização;
+- Kubernetes para orquestração;
+- Helm para gerenciamento declarativo;
+- GitHub Actions para CI/CD;
+- Backstage para catálogo de serviços.
+
+---
+
+# Endpoints disponíveis
+
+| Endpoint | Descrição |
+|---|---|
+| `/` | Endpoint principal da aplicação |
+| `/health` | Healthcheck da aplicação |
+| `/metrics` | Métricas Prometheus |
+
+---
+
+# Fluxo de desenvolvimento
+
+## 1. Criar ambiente virtual
+
+### Via Makefile
+
+```bash
+make venv
+```
+
+### Comando manual equivalente
+
+```bash
+cd app
+python -m venv .venv
+```
+
+---
+
+## 2. Ativar ambiente virtual
+
+```bash
+source app/.venv/bin/activate
+```
+
+---
+
+## 3. Instalar dependências
+
+### Via Makefile
+
+```bash
+make install
+```
+
+### Comando manual equivalente
+
+```bash
+pip install -r app/requirements.txt
+```
+
+---
+
+## 4. Formatar código
+
+### Via Makefile
+
+```bash
+make fmt
+```
+
+### Comando manual equivalente
+
+```bash
+black app app/tests
+```
+
+---
+
+## 5. Executar lint
+
+### Via Makefile
+
+```bash
+make lint
+```
+
+### Comando manual equivalente
+
+```bash
+ruff check app app/tests
+```
+
+---
+
+## 6. Instalar hooks de pre-commit
+
+### Via Makefile
+
+```bash
+make precommit-install
+```
+
+### Comando manual equivalente
+
+```bash
+pre-commit install
+```
+
+---
+
+## 7. Executar hooks manualmente
+
+### Via Makefile
+
+```bash
+make precommit-run
+```
+
+### Comando manual equivalente
+
+```bash
+pre-commit run --all-files
+```
+
+---
+
+# Comandos Operacionais
+
+| Área | Objetivo | Makefile | Comando manual equivalente |
+|---|---|---|---|
+| 🐍 Python | Executar API localmente | `make run` | `uvicorn app.main:app --host 0.0.0.0 --port 8000` |
+| 🐍 Python | Executar testes | `make test` | `pytest app/tests -q` |
+| 🐍 Python | Validar aplicação | `make validate` | `python -c "from app.main import app" && pytest app/tests -q` |
+| 🐳 Docker | Construir imagem Docker | `make docker-build` | `docker build -t challenge-devops -f deploy/docker/Dockerfile .` |
+| 🐳 Docker | Executar container Docker | `make docker-run` | `docker run --rm -p 8000:8000 challenge-devops` |
+| 🐳 Docker Compose | Subir ambiente | `make compose-up` | `docker compose -f deploy/compose/docker-compose.yml up --build -d` |
+| 🐳 Docker Compose | Visualizar logs | `make compose-logs` | `docker compose -f deploy/compose/docker-compose.yml logs --follow` |
+| 🐳 Docker Compose | Parar ambiente | `make compose-down` | `docker compose -f deploy/compose/docker-compose.yml down` |
+| ☸️ Kubernetes | Aplicar manifests | `make kube-apply` | `kubectl apply -f deploy/kubernetes` |
+| ☸️ Kubernetes | Remover recursos | `make kube-delete` | `kubectl delete -f deploy/kubernetes --ignore-not-found` |
+| ☸️ Kubernetes | Visualizar recursos | `make kube-status` | `kubectl get all -n challenge-devops` |
+| ☸️ Kubernetes | Fazer port-forward | `make port-forward` | `kubectl port-forward svc/challenge-devops-service 8082:80 -n challenge-devops` |
+| ☸️ Kubernetes | Visualizar logs | `make kube-logs` | `kubectl logs -f deployment/challenge-devops -n challenge-devops` |
+| ☸️ Kubernetes | Visualizar pods | `make kube-debug` | `kubectl get pods -o wide -n challenge-devops` |
+| 📦 Helm | Validar chart Helm | `make helm-lint` | `helm lint deploy/helm/challenge-devops` |
+| 📦 Helm | Renderizar templates Helm | `make helm-template` | `helm template challenge-devops deploy/helm/challenge-devops --namespace challenge-devops` |
+| 📦 Helm | Instalar release Helm | `make helm-install` | `helm install challenge-devops deploy/helm/challenge-devops --namespace challenge-devops --create-namespace` |
+| 📦 Helm | Atualizar release Helm | `make helm-upgrade` | `helm upgrade challenge-devops deploy/helm/challenge-devops --namespace challenge-devops --reuse-values` |
+| 📦 Helm | Remover release Helm | `make helm-uninstall` | `helm uninstall challenge-devops --namespace challenge-devops` |
+| 🔐 Segurança | Executar análise Trivy | `make trivy` | `trivy image --no-progress --severity HIGH,CRITICAL challenge-devops` |
+| 🔐 Segurança | Executar análise rígida Trivy | `make trivy FAIL_ON_VULNS=true` | `trivy image --no-progress --exit-code 1 --severity HIGH,CRITICAL challenge-devops` |
+| 🔄 CI/CD | Executar validação completa | `make check` | `black app app/tests && ruff check app app/tests && pytest app/tests -q` |
+| 🧹 Limpeza | Limpar cache e arquivos temporários | `make clean` | `find . -type d -name "__pycache__" -exec rm -rf {} +` |
+| 📊 Observabilidade | Verificar healthcheck | — | `curl localhost:8000/health` |
+| 📊 Observabilidade | Verificar métricas Prometheus | — | `curl localhost:8000/metrics` |
+| 📊 Observabilidade | Verificar endpoint principal | — | `curl localhost:8000/` |
+
+---
+
+# Execução local em Python
+
+## Via Makefile
+
+```bash
+make install
+make run
+```
+
+---
+
+## Comando manual equivalente
+
+```bash
+cd app
+
+python -m venv .venv
+
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+---
+
+# Docker
+
+## Via Makefile
+
+```bash
+make docker-build
+make docker-run
+```
+
+---
+
+## Comandos manuais equivalentes
+
+Construir imagem Docker:
+
+```bash
+docker build -t challenge-devops -f deploy/docker/Dockerfile .
+```
+
+Executar container localmente:
+
+```bash
+docker run --rm -p 8000:8000 challenge-devops
+```
+
+---
+
+# Docker Compose
+
+## Via Makefile
+
+```bash
+make compose-up
+make compose-logs
+make compose-down
+```
+
+---
+
+## Comandos manuais equivalentes
+
+Subir ambiente:
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml up --build -d
+```
+
+Visualizar logs:
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml logs --follow
+```
+
+Parar ambiente:
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml down
+```
+
+---
+
+# Kubernetes
+
+## Aplicar manifests
+
+### Via Makefile
+
+```bash
+make kube-apply
+```
+
+### Comando manual equivalente
+
+```bash
+kubectl apply -f deploy/kubernetes
+```
+
+---
+
+## Fazer port-forward
+
+### Via Makefile
+
+```bash
+make port-forward
+```
+
+### Comando manual equivalente
+
+```bash
+kubectl port-forward svc/challenge-devops-service 8082:80 -n challenge-devops
+```
+
+---
+
+## Visualizar logs
+
+### Via Makefile
+
+```bash
+make kube-logs
+```
+
+### Comando manual equivalente
+
+```bash
+kubectl logs -f deployment/challenge-devops -n challenge-devops
+```
+
+---
+
+## Visualizar recursos do cluster
+
+### Via Makefile
+
+```bash
+make kube-status
+```
+
+### Comando manual equivalente
+
+```bash
+kubectl get all -n challenge-devops
+```
+
+---
+
+# Helm
+
+## Instalar release
+
+### Via Makefile
+
+```bash
+make helm-install
+```
+
+### Comando manual equivalente
+
+```bash
+helm install challenge-devops \
+  deploy/helm/challenge-devops \
+  --namespace challenge-devops \
+  --create-namespace
+```
+
+---
+
+## Atualizar release
+
+### Via Makefile
+
+```bash
+make helm-upgrade
+```
+
+### Comando manual equivalente
+
+```bash
+helm upgrade challenge-devops \
+  deploy/helm/challenge-devops \
+  --namespace challenge-devops \
+  --reuse-values
+```
+
+---
+
+# Observabilidade
+
+A aplicação expõe:
+
+- métricas Prometheus em `/metrics`;
+- healthcheck em `/health`;
+- logging estruturado em JSON.
+
+---
+
+## Exemplo de log estruturado
+
+```json
+{
+  "event": "healthcheck_called",
+  "level": "info",
+  "timestamp": "2026-05-22T20:00:00Z"
+}
+```
+
+---
+
+## Métricas Prometheus
+
+O endpoint `/metrics` utiliza:
+
+```python
+generate_latest()
+```
+
+para exportar métricas compatíveis com Prometheus.
+
+Exemplo:
+
+```text
+# HELP requests_total Total requests
+# TYPE requests_total counter
+requests_total 5.0
+```
+
+---
+
+# Dashboards
+
+## Prometheus
+
+![Prometheus](docs/images/prometheus-targets.png)
+
+---
+
+## Grafana
+
+![Grafana](docs/images/grafana-dashboard.png)
+
+---
+
+# Análise de Segurança
+
+O projeto utiliza Trivy para análise de vulnerabilidades da imagem Docker.
+
+## Via Makefile
+
+```bash
+make trivy
+```
+
+---
+
+## Comando manual equivalente
+
+```bash
+trivy image \
+  --no-progress \
+  --severity HIGH,CRITICAL \
+  challenge-devops
+```
+
+---
+
+## Execução rígida
+
+```bash
+make trivy FAIL_ON_VULNS=true
+```
+
+---
+
+# CI/CD
+
+O projeto utiliza GitHub Actions para automação de validações.
+
+---
+
+## Pipeline automatizado
+
+O pipeline executa:
+
+- instalação de dependências;
+- validação de imports;
+- testes automatizados;
+- lint com Ruff;
+- formatação com Black;
+- build Docker;
+- análise Trivy.
+
+---
+
+## Workflow principal
+
+```text
+.github/workflows/ci.yml
+```
+
+---
+
+## Fluxo completo de validação
+
+### Via Makefile
+
+```bash
+make check
+```
+
+### Execução estrita
+
+```bash
+make check STRICT=true
+```
+
+---
+
+# Integração com Backstage
+
+O projeto possui integração com Backstage utilizando:
+
+```text
+catalog-info.yaml
+```
+
+---
+
+## Objetivos da integração
+
+- centralizar metadados operacionais;
+- melhorar descoberta de serviços;
+- integrar CI/CD;
+- integrar Kubernetes e Helm;
+- consolidar documentação técnica.
+
+---
+
+## Execução local do Backstage
+
+```bash
+yarn start
+```
+
+---
+
+## URLs locais
+
+Frontend:
+
+```text
+http://localhost:3001
+```
+
+Backend:
+
+```text
+http://localhost:7008
+```
+
+---
+
+# Estrutura do catálogo Backstage
+
+```mermaid
+flowchart LR
+
+    Developer[Developer] --> Repo[GitHub Repository]
+
+    Repo --> Catalog[catalog-info.yaml]
+
+    Catalog --> Backstage[Backstage Catalog]
+
+    Backstage --> Docs[Documentation]
+    Backstage --> CICD[GitHub Actions]
+    Backstage --> K8s[Kubernetes Manifests]
+    Backstage --> Helm[Helm Charts]
+    Backstage --> Observability[Grafana Dashboards]
+```
+
+---
+
+# Qualidade de código
+
+O projeto utiliza:
+
+- Ruff;
+- Black;
+- Pre-Commit;
+- Pytest.
+
+---
+
+# Observações finais
+
+- O Makefile foi projetado para simplificar operações recorrentes;
+- Os comandos manuais equivalentes foram documentados para transparência operacional;
+- O projeto segue princípios cloud-native;
+- A stack foi estruturada para demonstrar práticas modernas de DevOps, SRE e Platform Engineering.
