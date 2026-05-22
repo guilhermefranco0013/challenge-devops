@@ -15,7 +15,7 @@ async def root():
 
     logger.info("root_endpoint_called")
 
-    return {"message": "Challenge DevOps API"}
+    return {"status": "ok"}
 
 
 @router.get("/health")

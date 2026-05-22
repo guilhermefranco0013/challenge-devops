@@ -9,7 +9,7 @@ def test_root_endpoint_returns_message():
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Challenge DevOps API"}
+    assert response.json() == {"status": "ok"}
 
 
 def test_health_endpoint_returns_ok_status():
