@@ -32,5 +32,5 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: platform-team
+  owner: guest
 
