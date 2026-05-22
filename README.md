@@ -9,18 +9,6 @@ Este repositório contém um pequeno serviço FastAPI construído como um desafi
 - observabilidade com Prometheus e Grafana
 - fluxo de qualidade com `Makefile`, `ruff`, `black` e `pre-commit`
 
-## Novidades adicionadas
-
-- `Makefile` com comandos de setup, teste, lint, formatação, Docker, Compose, Kubernetes, Helm e port-forward
-- `.pre-commit-config.yaml` para rodar `black` e `ruff` automaticamente em commits
-- targets de qualidade:
-  - `make dev-setup`
-  - `make lint`
-  - `make fmt`
-  - `make precommit-install`
-  - `make precommit-run`
-- port-forward Kubernetes exposto em `8082` via `make k8s-port-forward`
-
 ## Requisitos
 
 - Python 3.12+

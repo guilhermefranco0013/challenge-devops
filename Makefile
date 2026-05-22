@@ -50,10 +50,14 @@ help:
 	@echo "  helm-uninstall  - Uninstall the Helm release"
 	@echo "  clean           - Remove Python cache, pytest cache and temporary files"
 
-venv:
+venv-create:
 	@echo "Creating Python virtualenv in $(APP_DIR)/.venv..."
 	cd $(APP_DIR) && $(PYTHON) -m venv .venv
 	@echo "Activate with: source $(APP_DIR)/.venv/bin/activate"
+
+venv:
+	@echo "Run:"
+	@echo "source app/.venv/bin/activate"
 
 install: deps
 
@@ -119,27 +123,23 @@ compose-logs:
 	@echo "Following Docker Compose logs..."
 	docker compose -f $(COMPOSE_FILE) logs --follow
 
-k8s-apply:
+kube-apply:
 	@echo "Applying Kubernetes manifests from $(K8S_DIR)..."
 	kubectl apply -f $(K8S_DIR)
 
-k8s-delete:
+kube-delete:
 	@echo "Deleting Kubernetes resources from $(K8S_DIR)..."
 	kubectl delete -f $(K8S_DIR) --ignore-not-found
 
-k8s-status:
+kube-status:
 	@echo "Listing Kubernetes resources in namespace $(HELM_NAMESPACE)..."
 	kubectl get all -n $(HELM_NAMESPACE)
-
-k8s-port-forward:
-	@echo "Forwarding service port 80 to localhost:8082..."
-	kubectl port-forward --address 0.0.0.0 svc/challenge-devops-service 8082:80 -n $(HELM_NAMESPACE)
 
 port-forward:
 	@echo "Port-forwarding (customizable): SERVICE=${SERVICE:-svc/challenge-devops-service} LOCAL_PORT=${LOCAL_PORT:-8082} REMOTE_PORT=${REMOTE_PORT:-80} NAMESPACE=${NAMESPACE:-$(HELM_NAMESPACE)}"
 	kubectl port-forward --address 0.0.0.0 $${SERVICE:-svc/challenge-devops-service} $${LOCAL_PORT:-8082}:$${REMOTE_PORT:-80} -n $${NAMESPACE:-$(HELM_NAMESPACE)}
 
-k8s-logs:
+kube-logs:
 	@echo "Tailing logs in namespace $(HELM_NAMESPACE) (attempting label selector app=$(HELM_RELEASE))..."
 	@pods="$$(kubectl get pods -n $(HELM_NAMESPACE) -o jsonpath='{.items[*].metadata.name}')"; \
 	if [ -z "$$pods" ]; then \
@@ -205,3 +205,38 @@ clean:
 	@echo "Cleaning Python bytecode and pytest cache..."
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
 	rm -rf $(APP_DIR)/.pytest_cache .pytest_cache .ruff_cache $(APP_DIR)/.ruff_cache
+
+kube-debug:
+	@echo "========== NAMESPACE =========="
+	@echo "$(HELM_NAMESPACE)"
+	@echo ""
+
+	@echo "========== PODS =========="
+	kubectl get pods -n $(HELM_NAMESPACE) -o wide
+	@echo ""
+
+	@echo "========== SERVICES =========="
+	kubectl get svc -n $(HELM_NAMESPACE)
+	@echo ""
+
+	@echo "========== DEPLOYMENTS =========="
+	kubectl get deploy -n $(HELM_NAMESPACE)
+	@echo ""
+
+	@echo "========== IMAGES =========="
+	kubectl get pods -n $(HELM_NAMESPACE) \
+		-o=jsonpath="{range .items[*]}{.metadata.name}{': '}{.spec.containers[*].image}{'\n'}{end}"
+	@echo ""
+
+	@echo "========== RESTARTS =========="
+	kubectl get pods -n $(HELM_NAMESPACE) \
+		--sort-by='.status.containerStatuses[0].restartCount'
+	@echo ""
+
+	@echo "========== NODE =========="
+	kubectl get nodes
+	@echo ""
+
+	@echo "========== EVENTS =========="
+	kubectl get events -n $(HELM_NAMESPACE) \
+		--sort-by=.metadata.creationTimestamp | tail -20
