@@ -1,145 +1,97 @@
-# Project Architecture
+# Architecture
 
-## Overview
+## Visão geral do projeto
 
-This repository implements a lightweight Python application based on FastAPI, with an emphasis on observability and flexible deployment options.
+O projeto foi organizado para separar claramente responsabilidades:
 
-The project structure is organized as follows:
+- `app/main.py`: inicializa o FastAPI
+- `app/api/routes.py`: define rotas públicas e métricas
+- `app/core/config.py`: configura ambiente e variáveis
+- `app/observability/`: contém logging e métricas
+- `deploy/`: contém Docker, Compose, Kubernetes e Helm
+- `monitoring/`: contém Prometheus e Grafana
 
-- `app/`
-  - `main.py`: FastAPI application entry point.
-  - `api/routes.py`: public route definitions for `/`, `/health`, and `/metrics`.
-  - `core/config.py`: environment variable loading and centralized configuration.
-  - `observability/`: structured logging and Prometheus metrics implementation.
-  - `requirements.txt`: Python dependency list.
+## Fluxo arquitetural
 
-- `deploy/`
-  - `docker/Dockerfile`: multi-stage application image.
-  - `compose/docker-compose.yml`: local environment with healthcheck.
-  - `kubernetes/`: Kubernetes manifests for namespace, deployment, service, and ingress.
-  - `helm/challenge-devops/`: Helm chart for deploy parameterization.
-
-- `monitoring/`
-  - `prometheus/prometheus.yml`: Prometheus scraping configuration.
-  - `docker-compose.yml`: local Prometheus and Grafana stack.
-  - `grafana/dashboards/`: versioned observability dashboards.
-
-## Architectural Flow
-
-The application follows a clear and linear architectural flow:
-
-1. A client makes an HTTP request to the API.
-2. FastAPI receives the request and dispatches it to handlers defined in `app/api/routes.py`.
-3. Each route performs minimal processing, emits structured logs using `structlog`, and updates metrics.
-4. Metrics are exposed at `/metrics` for Prometheus scraping.
-5. Prometheus collects metrics from the configured endpoint.
-6. Grafana visualizes those metrics using versioned dashboards.
+1. O cliente faz requisição HTTP
+2. FastAPI despacha para `app/api/routes.py`
+3. O endpoint atualiza métricas e registra logs estruturados
+4. Métricas são expostas em `/metrics`
+5. Prometheus coleta essas métricas
+6. Grafana exibe os dashboards versionados
 
 ```mermaid
 flowchart LR
-  Client[HTTP Client] -->|GET /, /health, /metrics| FastAPI[FastAPI]
-  FastAPI -->|Routes request| Routes[app/api/routes.py]
-  Routes -->|Emits structured log| Logger[structlog JSON]
-  Routes -->|Increment counter| Metrics[app_requests_total]
-  Routes -->|Expose metrics| MetricsEndpoint[/metrics]
+  Client[HTTP Client] -->|GET /, /health, /metrics| FastAPI[FastAPI Application]
+  FastAPI -->|Routes| Routes[app/api/routes.py]
+  Routes -->|Log| Logger[structlog JSON Logs]
+  Routes -->|Metric| Metrics[app/observability/metrics.py]
+  Metrics -->|Expose| MetricsEndpoint[/metrics]
   MetricsEndpoint -->|Scrape| Prometheus[Prometheus]
-  Prometheus -->|Visualize| Grafana[Grafana]
+  Prometheus -->|Visualize| Grafana[Grafana Dashboard]
 ```
 
-## Separation of Concerns
+## Padrões de código e qualidade
 
-The project clearly separates the following responsibilities:
+O projeto agora inclui um `Makefile` para padronizar tarefas e reduzir comandos manuais.
 
-- Presentation/API: `app/main.py` and `app/api/routes.py`.
-- Configuration: `app/core/config.py` pulls values from `.env`.
-- Observability: `app/observability/logging.py` and `app/observability/metrics.py`.
-- Deployment: `deploy/docker`, `deploy/compose`, `deploy/kubernetes`, `deploy/helm`.
+### Exemplos de targets relevantes
 
-This separation supports evolution of the application without mixing business logic with infrastructure concerns.
+```makefile
+dev-setup:
+	cd app && python3 -m venv .venv
+	app/.venv/bin/pip install ruff black pre-commit
 
-## Modularization
+lint:
+  app/.venv/bin/ruff check app app/tests
 
-The codebase is intentionally minimal but modular enough for its scope:
+fmt:
+	app/.venv/bin/black app
+```
 
-- FastAPI routing is isolated in `app/api/routes.py`.
-- Metrics are defined in `app/observability/metrics.py` and imported where needed.
-- Structured logging is configured in `app/observability/logging.py`.
+### Ferramentas adicionadas
 
-This model enables future expansion with additional endpoints, services, or telemetry.
+- `black`: formatação consistente de código Python
+- `ruff`: análise estática e lint rápido
+- `pre-commit`: execução de hooks antes do commit
 
-## Observability Architecture
+### Exemplo de configuração de hooks
 
-The observability stack includes:
+```yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.11.0
+    hooks:
+      - id: black
 
-- structured application logging
-- Prometheus metrics
-- Grafana dashboards
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.261
+    hooks:
+      - id: ruff
+        args: ["check", "app", "app/tests"]
+```
 
-The application adopts three core observability principles:
+## Observabilidade
 
-1. Structured logging with `structlog` in `app/observability/logging.py`.
-2. Prometheus metric exposure at `/metrics` via `app/api/routes.py` and `app/observability/metrics.py`.
-3. Versioned Grafana dashboards stored in `monitoring/grafana/dashboards/challenge-devops-observability-dashboard.json` to support operational visualization.
+A arquitetura de observabilidade é apoiada por métricas e logs estruturados.
 
-## Kubernetes Architecture
+- `app/observability/logging.py`: configura `structlog`
+- `app/observability/metrics.py`: define métricas Prometheus
 
-The Kubernetes deployment uses:
+O endpoint `/metrics` é exposto pela rota:
 
-- namespace isolation for project resources
-- Deployment replicas for application availability
-- readiness and liveness probes using `/health`
-- Service abstraction for internal exposure
-- local validation using a Kind cluster
-- resource limits and requests
+```python
+@router.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type="text/plain")
+```
 
-The manifests are stored in `deploy/kubernetes/`
-and can be applied directly using `kubectl apply -f`.
+## Atualizações recentes
 
-## Helm
+A documentação agora cobre:
+- execução local usando `make run`
+- qualidade de código com `make lint` e `make fmt`
+- deployment com `make docker-build`, `make compose-up`, `make k8s-apply` e `make helm-install`
+- port-forward Kubernetes com `make k8s-port-forward`
 
-The Helm chart in `deploy/helm/challenge-devops/` provides a parameterized layer for Kubernetes deployment.
-
-Key chart components include:
-
-- `Chart.yaml`: chart metadata and version.
-- `values.yaml`: configurable defaults for `replicaCount`, `image.repository`, `image.tag`, `service.type`, `service.port`, `containerPort`, and `namespace`.
-- `templates/deployment.yaml`: deployment template that injects values for the image, probes, port, and namespace.
-- `templates/service.yaml`: service template with configurable type and port.
-
-The chart enables the same deployment pattern across different environments by overriding values instead of modifying manifests.
-
-- Development environments can use `image.pullPolicy: Never` and `service.type: NodePort`.
-- Staging or production environments can adjust `image.repository`, `image.tag`, and `namespace` declaratively.
-
-The current chart is functional for a basic deployment, but it does not yet include `ingress`, `configMap`, `secret`, `resources`, or `autoscaling` support.
-
-## CI/CD
-
-The repository includes GitHub Actions workflows for:
-
-- application build validation
-- Docker image validation
-- security scanning using Trivy
-- CI pipeline automation
-
-This provides basic CI/CD automation and infrastructure validation.
-
-## Deployment Strategy
-
-The project supports multiple deployment strategies to simplify local development, Kubernetes validation, and Helm-based orchestration.:
-
-- Local deployment via Docker Compose in `deploy/compose/docker-compose.yml`.
-- Kubernetes deployment using raw manifests in `deploy/kubernetes/`.
-- Kubernetes deployment with Helm using `deploy/helm/challenge-devops/`.
-
-The current implementation focuses on development and validation environments.
-
-For production readiness, future improvements may include:
-
-- ingress controller configuration
-- TLS termination
-- persistent storage
-- centralized log aggregation
-- GitOps workflows
-- secret management
-- horizontal pod autoscaling
+Isso transforma o repositório em um ambiente mais profissional para review e entrega.

@@ -19,7 +19,7 @@ metadata:
     - observability
 
   annotations:
-    backstage.io/source-location: url:https://github.com/guilhermefranco0013/challenge-devops
+    backstage.io/source-location: url:https://raw.githubusercontent.com/guilhermefranco0013/challenge-devops/main/backstage/catalog-info.yaml
     github.com/project-slug: guilhermefranco0013/challenge-devops
 
   links:
@@ -33,5 +33,4 @@ spec:
   type: service
   lifecycle: experimental
   owner: platform-team
-  system: challenge-devops-system
 

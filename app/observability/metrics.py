@@ -1,6 +1,3 @@
 from prometheus_client import Counter
 
-REQUEST_COUNTER = Counter(
-    "app_requests_total",
-    "Total application requests"
-)
+REQUEST_COUNTER = Counter("app_requests_total", "Total application requests")

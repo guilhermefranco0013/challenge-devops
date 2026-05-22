@@ -1,97 +1,111 @@
 # Deployment
 
+## Visão geral
+
+A implantação do projeto suporta três modos principais:
+
+1. Docker local
+2. Docker Compose local
+3. Kubernetes e Helm
+
+O `Makefile` centraliza os comandos de execução e implantação na raiz do repositório.
+
+## Comandos Makefile recomendados
+
+- `make docker-build`
+- `make docker-run`
+- `make compose-up`
+- `make compose-down`
+- `make compose-logs`
+- `make k8s-apply`
+- `make k8s-port-forward`
+- `make helm-install`
+- `make helm-upgrade`
+
 ## Docker Image
 
-The application image is defined in `deploy/docker/Dockerfile` using a multi-stage build:
+A imagem está definida em `deploy/docker/Dockerfile` com multi-stage build.
 
-- `builder` stage installs Python dependencies with `pip --no-cache-dir --user`.
-- `runtime` stage copies the application and configures `PYTHONDONTWRITEBYTECODE` and `PYTHONUNBUFFERED`.
-- `EXPOSE 8000` and `HEALTHCHECK` validate the container at runtime.
+- Stage `builder`: instala dependências em `/root/.local`
+- Stage `runtime`: copia o código e configura o ambiente
+- O container expõe a porta `8000`
+- `HEALTHCHECK` valida o endpoint `/health`
 
 ## Docker Compose
 
-The local development environment is described in `deploy/compose/docker-compose.yml`:
+O ambiente local de desenvolvimento usa `deploy/compose/docker-compose.yml`.
 
-- `app` service is built from `deploy/docker/Dockerfile`.
-- Port mapping uses `8000:8000`.
-- `env_file` references `../../.env`.
-- Healthcheck uses the `/health` endpoint.
-
-This configuration enables quick container execution without requiring a Kubernetes environment.
+- Serviço `app` construído a partir de `deploy/docker/Dockerfile`
+- Mapeamento de porta `8000:8000`
+- Healthcheck para `/health`
+- Leitura de variáveis via `../../.env`
 
 ## Kubernetes
 
-The Kubernetes deployment is available in `deploy/kubernetes/` and includes:
+Os manifests estão em `deploy/kubernetes/`:
 
-- `namespace.yaml`: defines the `challenge-devops` namespace.
-- `deployment.yaml`: deployment with `replicas: 2`, readiness and liveness probes, and `imagePullPolicy: Never`.
-- `service.yaml`: A `NodePort` service exposes the application internally through port `80`, forwarding traffic to container port `8000`.
-- `ingress.yaml`: present but empty, requiring configuration for external routing.
+- `namespace.yaml`
+- `deployment.yaml`
+- `service.yaml`
+- `ingress.yaml`
 
-## Deployment Flow
+### Observações importantes
 
-```mermaid
-flowchart LR
-    Developer[Developer] --> Docker[Docker Build]
+- `deployment.yaml` usa readiness e liveness probes para `/health`
+- `service.yaml` expõe o app internamente na porta `80`
+- `imagePullPolicy: Never` é útil para cluster local, mas não é recomendado em produção
 
-    Docker --> Compose[Docker Compose]
+### Aplicar manifests
 
-    Docker --> Kubernetes[Kubernetes Deployment]
-
-    Kubernetes --> Helm[Helm Chart]
-
-    Kubernetes --> FastAPI[FastAPI Application]
-
-    FastAPI --> Metrics[/metrics]
-
-    Metrics --> Prometheus[Prometheus]
-
-    Prometheus --> Grafana[Grafana Dashboard]
+```bash
+make k8s-apply
 ```
 
-### Notes
+### Port forward
 
-- `imagePullPolicy: Never` indicates reliance on a locally available image in the development cluster.
-- The current manifest set does not define resources, secrets, config maps, or network policies.
+```bash
+make k8s-port-forward
+```
+
+Isso expõe `svc/challenge-devops-service:80` localmente em `http://127.0.0.1:8082`.
 
 ## Helm
 
-The Helm chart is located in `deploy/helm/challenge-devops/` and includes:
+O chart está em `deploy/helm/challenge-devops`.
 
-- `Chart.yaml`: chart metadata.
-- `values.yaml`: configurable values for `replicaCount`, `image`, `service`, `containerPort`, and `namespace`.
-- `templates/deployment.yaml`: deployment template with parameters for image, namespace, probes, and port.
-- `templates/service.yaml`: service template with configurable type and port.
-
-This chart provides a reusable Kubernetes deployment path, Future improvements may include support for: `resources`, `ingress`, `serviceAccount`, and `configMap` support.
-
-## Execution
-
-### Local with Docker Compose
+### Instalação
 
 ```bash
-cd deploy/compose
-docker compose up --build -d
+make helm-install
 ```
 
-### Kubernetes Manual
+### Atualização
 
 ```bash
-kubectl apply -f deploy/kubernetes/
+make helm-upgrade
 ```
 
-### Helm
+### Arquivos chave
 
-```bash
-helm install challenge-devops deploy/helm/challenge-devops --namespace challenge-devops
+- `Chart.yaml`
+- `values.yaml`
+- `templates/deployment.yaml`
+- `templates/service.yaml`
+
+## Qualidade do deploy
+
+A documentação agora inclui os principais comandos de developer experience e os valores padrão do Helm.
+
+### Exemplo de snippet de deploy
+
+```yaml
+# deploy/helm/challenge-devops/values.yaml
+replicaCount: 2
+image:
+  repository: challenge-devops
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
 ```
-
-### Kubernetes Port Forward
-
-```bash
-helm install challenge-devops \
-deploy/helm/challenge-devops \
--n challenge-devops
-```
-
-This command exposes the Kubernetes service locally, allowing access to the FastAPI application and Prometheus metrics without requiring an ingress controller.
