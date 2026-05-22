@@ -135,7 +135,7 @@ kube-status:
 	@echo "Listing Kubernetes resources in namespace $(HELM_NAMESPACE)..."
 	kubectl get all -n $(HELM_NAMESPACE)
 
-port-forward:
+kube-port-forward:
 	@echo "Port-forwarding (customizable): SERVICE=${SERVICE:-svc/challenge-devops-service} LOCAL_PORT=${LOCAL_PORT:-8082} REMOTE_PORT=${REMOTE_PORT:-80} NAMESPACE=${NAMESPACE:-$(HELM_NAMESPACE)}"
 	kubectl port-forward --address 0.0.0.0 $${SERVICE:-svc/challenge-devops-service} $${LOCAL_PORT:-8082}:$${REMOTE_PORT:-80} -n $${NAMESPACE:-$(HELM_NAMESPACE)}
 

@@ -68,9 +68,9 @@ make docker-build
 make docker-run
 make compose-up
 make compose-down
-make k8s-apply
+make kube-apply
 make helm-install
-make k8s-port-forward
+make kube-port-forward
 make check
 make trivy
 make helm-lint
@@ -116,13 +116,13 @@ make compose-down
 ### Aplicar manifests
 
 ```bash
-make k8s-apply
+make kube-apply
 ```
 
 ### Fazer port-forward para expor a aplicação em 8082
 
 ```bash
-make k8s-port-forward
+make kube-port-forward
 ```
 
 ### Instalar via Helm
@@ -289,7 +289,7 @@ The local Backstage environment was successfully stabilized using Node.js 22
 Run the Backstage platform locally:
 
 ```bash
-yarn dev
+yarn start
 ```
 
 The Backstage frontend is exposed on:
