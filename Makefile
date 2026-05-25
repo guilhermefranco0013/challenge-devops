@@ -91,7 +91,7 @@ precommit-run:
 
 validate:
 	@echo "Validating application imports..."
-	$(VENV_BIN)/python -c "from app.main import app"
+	$(VENV_BIN)/python -c "from main import app"
 	@echo "Running tests..."
 	$(VENV_BIN)/pytest app/tests -q
 
@@ -101,7 +101,7 @@ test:
 
 run:
 	@echo "Starting FastAPI with Uvicorn..."
-	$(VENV_BIN)/uvicorn app.main:app --host 0.0.0.0 --port 8000
+	$(VENV_BIN)/uvicorn main:app --host 0.0.0.0 --port 8000
 
 docker-build:
 	@echo "Building Docker image $(IMAGE_NAME)..."

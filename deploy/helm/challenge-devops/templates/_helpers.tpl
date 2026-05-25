@@ -37,17 +37,17 @@ Common labels
 helm.sh/chart: {{ include "challenge-devops.chart" . }}
 {{ include "challenge-devops.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
 Selector labels
 */}}
 {{- define "challenge-devops.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "challenge-devops.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+kubernetes.io/name: {{ include "challenge-devops.name" . }}
+kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*

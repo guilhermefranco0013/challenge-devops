@@ -204,9 +204,9 @@ pre-commit run --all-files
 
 | Área | Objetivo | Makefile | Comando manual equivalente |
 |---|---|---|---|
-| 🐍 Python | Executar API localmente | `make run` | `uvicorn app.main:app --host 0.0.0.0 --port 8000` |
+| 🐍 Python | Executar API localmente | `make run` | `uvicorn main:app --host 0.0.0.0 --port 8000` |
 | 🐍 Python | Executar testes | `make test` | `pytest app/tests -q` |
-| 🐍 Python | Validar aplicação | `make validate` | `python -c "from app.main import app" && pytest app/tests -q` |
+| 🐍 Python | Validar aplicação | `make validate` | `python -c "from main import app" && pytest app/tests -q` |
 | 🐳 Docker | Construir imagem Docker | `make docker-build` | `docker build -t challenge-devops -f deploy/docker/Dockerfile .` |
 | 🐳 Docker | Executar container Docker | `make docker-run` | `docker run --rm -p 8000:8000 challenge-devops` |
 | 🐳 Docker Compose | Subir ambiente | `make compose-up` | `docker compose -f deploy/compose/docker-compose.yml up --build -d` |
