@@ -34,7 +34,7 @@ jobs:
 
       - name: Validate application imports
         run: |
-          python -c "from main import app"
+          python -c "from app.main import app"
 
       - name: Run tests
         run: |
