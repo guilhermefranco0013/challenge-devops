@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from api.routes import router
-from core.config import APP_NAME
+from app.api.routes import router
+from app.core.config import APP_NAME
 
 app = FastAPI(title=APP_NAME)
 
