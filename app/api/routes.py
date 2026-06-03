@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from prometheus_client import generate_latest
 from starlette.responses import Response
 
+from app.core.config import APP_ENV
 from app.observability.logging import logger
 from app.observability.metrics import REQUEST_COUNTER
 
@@ -15,7 +16,10 @@ async def root():
 
     logger.info("root_endpoint_called")
 
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "environment": APP_ENV
+        }
 
 
 @router.get("/health")
@@ -23,7 +27,10 @@ async def health():
 
     logger.info("healthcheck_called")
 
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "environment": APP_ENV
+    }
 
 
 @router.get("/metrics")

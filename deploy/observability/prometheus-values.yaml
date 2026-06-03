@@ -1,0 +1,12 @@
+server:
+  nodeSelector:
+    role: platform-observability
+
+alertmanager:
+  enabled: false
+
+path:
+  enabled: false
+
+adminUser: admin
+adminPassword: admin123

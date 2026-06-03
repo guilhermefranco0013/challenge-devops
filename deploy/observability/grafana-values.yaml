@@ -1,0 +1,8 @@
+nodeSelector:
+  role: platform-observability
+
+service:
+  type: ClusterIP
+
+adminUser: admin
+adminPassword: admin123

@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+
+metadata:
+  name: challenge-devops-prod
+  namespace: prod
+
+spec:
+  entryPoints:
+    - web
+
+  routes:
+    - match: Host(`prod.challenge.local`)
+      kind: Rule
+
+      services:
+        - name: challenge-devops-prod-service
+          port: 3200
+          

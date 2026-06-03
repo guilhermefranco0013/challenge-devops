@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+
+metadata:
+  name: challenge-devops-hml
+  namespace: hml
+
+spec:
+  entryPoints:
+    - web
+
+  routes:
+    - match: Host(`hml.challenge.local`)
+      kind: Rule
+
+      services:
+        - name: challenge-devops-hml-service
+          port: 80

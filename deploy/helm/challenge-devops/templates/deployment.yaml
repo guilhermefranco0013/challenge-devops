@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: challenge-devops
+  name: {{.Release.Name}}
   namespace: {{ .Values.namespace }}
 
 spec:
@@ -11,20 +11,42 @@ spec:
 
   selector:
     matchLabels:
-      app: challenge-devops
+      app: {{.Release.Name}}
 
   template:
 
     metadata:
       labels:
-        app: challenge-devops
+        app: {{.Release.Name}}
 
     spec:
+
+      nodeSelector:
+        role: platform-app
+
       containers:
 
-        - name: challenge-devops
+        - name: {{.Release.Name}}
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          envFrom:
+            - configMapRef:
+                name: challenge-devops-config
+
+            - secretRef:
+                name: challenge-devops-secret
+
+          env:
+
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.otel.endpoint | quote }}
+
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.otel.serviceName | quote }}
+
+            - name: DEPLOYMENT_ENVIRONMENT
+              value: {{ .Values.otel.environment | quote }}
 
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 

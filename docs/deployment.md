@@ -484,7 +484,7 @@ image:
   pullPolicy: IfNotPresent
 
 service:
-  type: NodePort
+  type: LoadBalancer
   port: 80
 ```
 

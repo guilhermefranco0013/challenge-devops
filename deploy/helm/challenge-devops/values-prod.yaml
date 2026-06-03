@@ -1,0 +1,21 @@
+environment: prod
+
+namespace: prod
+
+replicaCount: 3
+
+image:
+  repository: challenge-devops
+  pullPolicy: Never
+  tag: prod
+
+service:
+  type: LoadBalancer
+  port: 80
+
+containerPort: 8000
+
+otel:
+  endpoint: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318"
+  serviceName: "challenge-devops-api"
+  environment: "prod"
