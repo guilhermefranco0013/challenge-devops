@@ -1,23 +1,28 @@
 name: CI Pipeline
 
-on:
-
+"on":
   push:
     branches:
       - main
-
+      - develop
   pull_request:
     branches:
       - main
+      - develop
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
+  quality-security-build:
+    runs-on: [self-hosted, Linux, X64, kind, devops]
 
-  build-and-test:
-
-    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: challenge-devops
+      TRIVY_SEVERITY: HIGH,CRITICAL
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,23 +30,100 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: app/requirements.txt
 
-      - name: Install dependencies
+      - name: Create project virtual environment
         run: |
-          cd app
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m venv .venv
+
+      - name: Install dependencies into the project venv
+        run: |
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r app/requirements.txt
+          python -m pip install ruff black isort
+
+      - name: Run Ruff
+        run: |
+          . .venv/bin/activate
+          ruff check app app/tests
+
+      - name: Run Black check
+        run: |
+          . .venv/bin/activate
+          black --check app app/tests
+
+      - name: Run Isort check
+        run: |
+          . .venv/bin/activate
+          isort --check-only app app/tests
 
       - name: Validate application imports
         run: |
+          . .venv/bin/activate
           python -c "from app.main import app"
 
-      - name: Run tests
+      - name: Run tests (fail fast)
         run: |
-          pytest -q
+          . .venv/bin/activate
+          pytest -x -q
 
-      - name: Build Docker image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image with Buildx cache
         run: |
-          docker build \
-          -t challenge-devops \
-          -f deploy/docker/Dockerfile .
+          docker buildx build \
+            --load \
+            --cache-from=type=gha \
+            --cache-to=type=gha,mode=max \
+            -t $IMAGE_NAME \
+            -f deploy/docker/Dockerfile .
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: ${{ env.TRIVY_SEVERITY }}
+          exit-code: 1
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}
+          format: table
+          severity: ${{ env.TRIVY_SEVERITY }}
+          exit-code: 1
+
+      - name: Trivy image SARIF export
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: ${{ env.TRIVY_SEVERITY }}
+          exit-code: 0
+
+      - name: Generate SBOM
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}
+          format: spdx-json
+          output: trivy-sbom.spdx.json
+
+      - name: Upload Trivy security artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-artifacts
+          path: |
+            trivy-sbom.spdx.json
+            trivy-results.sarif
+          if-no-files-found: warn
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif

@@ -1,5 +1,7 @@
 import os
 
+from fastapi import FastAPI
+
 from opentelemetry import trace
 
 from opentelemetry.sdk.resources import Resource
@@ -18,7 +20,7 @@ from opentelemetry.instrumentation.fastapi import (
 )
 
 
-def configure_telemetry(app):
+def configure_telemetry(app: FastAPI) -> None:
 
     resource = Resource.create(
         {
@@ -33,13 +35,13 @@ def configure_telemetry(app):
         }
     )
 
-    trace.set_tracer_provider(
-        TracerProvider(
-            resource=resource,
-        )
+    tracer_provider = TracerProvider(
+        resource=resource,
     )
 
-    tracer_provider = trace.get_tracer_provider()
+    trace.set_tracer_provider(
+        tracer_provider
+    )
 
     otel_endpoint = os.getenv(
         "OTEL_EXPORTER_OTLP_ENDPOINT"
@@ -50,7 +52,7 @@ def configure_telemetry(app):
         tracer_provider.add_span_processor(
             BatchSpanProcessor(
                 OTLPSpanExporter(
-                    endpoint=otel_endpoint,
+                    endpoint=f"{otel_endpoint}/v1/traces",
                 )
             )
         )

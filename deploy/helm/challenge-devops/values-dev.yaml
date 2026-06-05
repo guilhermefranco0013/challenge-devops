@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: challenge-devops
-  pullPolicy: Never
+  pullPolicy: dev
   tag: dev
 
 service:

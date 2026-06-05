@@ -14,7 +14,7 @@ async def root():
     logger.info("root_endpoint_called")
 
     return {
-        "status": "ok",
+        "status": "ok Healthy",
         "environment": APP_ENV,
     }
 
@@ -25,7 +25,7 @@ async def health():
     logger.info("healthcheck_called")
 
     return {
-        "status": "ok",
+        "status": "ok Healthy",
         "environment": APP_ENV,
     }
 
