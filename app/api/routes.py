@@ -4,7 +4,6 @@ from starlette.responses import Response
 
 from app.core.config import APP_ENV
 from app.observability.logging import logger
-from app.observability.metrics import REQUEST_COUNTER
 
 router = APIRouter()
 
@@ -12,14 +11,12 @@ router = APIRouter()
 @router.get("/")
 async def root():
 
-    REQUEST_COUNTER.inc()
-
     logger.info("root_endpoint_called")
 
     return {
         "status": "ok",
-        "environment": APP_ENV
-        }
+        "environment": APP_ENV,
+    }
 
 
 @router.get("/health")
@@ -29,11 +26,14 @@ async def health():
 
     return {
         "status": "ok",
-        "environment": APP_ENV
+        "environment": APP_ENV,
     }
 
 
 @router.get("/metrics")
 async def metrics():
 
-    return Response(generate_latest(), media_type="text/plain")
+    return Response(
+        generate_latest(),
+        media_type="text/plain",
+    )

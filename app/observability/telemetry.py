@@ -35,7 +35,7 @@ def configure_telemetry(app):
 
     trace.set_tracer_provider(
         TracerProvider(
-            resource=resource
+            resource=resource,
         )
     )
 
@@ -43,7 +43,11 @@ def configure_telemetry(app):
 
     tracer_provider.add_span_processor(
         BatchSpanProcessor(
-            OTLPSpanExporter()
+            OTLPSpanExporter(
+                endpoint=os.getenv(
+                    "OTEL_EXPORTER_OTLP_ENDPOINT",
+                )
+            )
         )
     )
 
