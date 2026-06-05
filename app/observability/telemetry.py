@@ -41,14 +41,18 @@ def configure_telemetry(app):
 
     tracer_provider = trace.get_tracer_provider()
 
-    tracer_provider.add_span_processor(
-        BatchSpanProcessor(
-            OTLPSpanExporter(
-                endpoint=os.getenv(
-                    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    otel_endpoint = os.getenv(
+        "OTEL_EXPORTER_OTLP_ENDPOINT"
+    )
+
+    if otel_endpoint:
+
+        tracer_provider.add_span_processor(
+            BatchSpanProcessor(
+                OTLPSpanExporter(
+                    endpoint=otel_endpoint,
                 )
             )
         )
-    )
 
     FastAPIInstrumentor.instrument_app(app)
