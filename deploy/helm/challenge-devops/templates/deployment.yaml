@@ -1,31 +1,27 @@
 apiVersion: apps/v1
-
 kind: Deployment
 
 metadata:
-  name: {{.Release.Name}}
+  name: {{ .Release.Name }}
 
 spec:
   replicas: {{ .Values.replicaCount }}
 
   selector:
     matchLabels:
-      app: {{.Release.Name}}
+      app: {{ .Release.Name }}
 
   template:
-
     metadata:
       labels:
-        app: {{.Release.Name}}
+        app: {{ .Release.Name }}
 
     spec:
-
       nodeSelector:
         role: platform-app
 
       containers:
-
-        - name: {{.Release.Name}}
+        - name: {{ .Release.Name }}
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 
@@ -35,17 +31,15 @@ spec:
             allowPrivilegeEscalation: false
 
           resources:
-          {{- toYaml .Values.resources | nindent 6 }}
+{{ toYaml .Values.resources | nindent 12 }}
 
           envFrom:
             - configMapRef:
                 name: challenge-devops-config
-
             - secretRef:
                 name: challenge-devops-secret
 
           env:
-
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: {{ .Values.otel.endpoint | quote }}
 
@@ -78,6 +72,5 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.containerPort }}
-
             failureThreshold: 30
             periodSeconds: 5
