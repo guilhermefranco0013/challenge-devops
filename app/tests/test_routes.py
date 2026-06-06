@@ -37,9 +37,7 @@ def test_metrics_endpoint_returns_prometheus_text():
 
     assert response.status_code == 200
 
-    assert response.headers[
-        "content-type"
-    ].startswith("text/plain")
+    assert response.headers["content-type"].startswith("text/plain")
 
 
 def test_metrics_endpoint_contains_counter():
@@ -48,7 +46,4 @@ def test_metrics_endpoint_contains_counter():
 
     assert response.status_code == 200
 
-    assert (
-        "app_requests_total"
-        in response.text
-    )
+    assert "app_requests_total" in response.text

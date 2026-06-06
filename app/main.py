@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import router
 from app.core.config import APP_NAME
-
 from app.observability.metrics import REQUEST_COUNTER
 from app.observability.telemetry import configure_telemetry
 

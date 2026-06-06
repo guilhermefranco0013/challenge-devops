@@ -14,7 +14,11 @@ async def root():
     logger.info("root_endpoint_called")
 
     return {
-        "status": "ok Healthy",
+        "status": "ok",
+        "message": "Service is healthy",
+        "service": "challenge-devops",
+        "version": "1.0.0",
+        "uptime": "0d 0h 0m",
         "environment": APP_ENV,
     }
 
@@ -25,7 +29,11 @@ async def health():
     logger.info("healthcheck_called")
 
     return {
-        "status": "ok Healthy",
+        "status": "ok",
+        "message": "Service is healthy",
+        "service": "challenge-devops",
+        "version": "1.0.0",
+        "uptime": "0d 0h 0m",
         "environment": APP_ENV,
     }
 
