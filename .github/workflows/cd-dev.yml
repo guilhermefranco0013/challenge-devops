@@ -16,8 +16,9 @@ jobs:
 
     env:
       NAMESPACE: dev
-      RELEASE_NAME: challenge-devops
-      VALUES_FILE: deploy/helm/challenge-devops/values-dev.yaml
+      RELEASE_NAME: challenge-devops-dev
+      VALUES_BASE_FILE: deploy/helm/challenge-devops/values.yaml
+      VALUES_ENV_FILE: deploy/helm/challenge-devops/values-dev.yaml
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository_owner }}/challenge-devops
       IMAGE_TAG: ${{ github.sha }}
@@ -60,11 +61,16 @@ jobs:
 
       - name: Helm lint
         run: |
-          helm lint deploy/helm/challenge-devops
+          helm lint deploy/helm/challenge-devops \
+            --values ${{ env.VALUES_BASE_FILE }} \
+            --values ${{ env.VALUES_ENV_FILE }}
 
       - name: Helm template validation
         run: |
-          helm template ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops --namespace ${{ env.NAMESPACE }} > rendered-dev.yaml
+          helm template ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops \
+            --namespace ${{ env.NAMESPACE }} \
+            --values ${{ env.VALUES_BASE_FILE }} \
+            --values ${{ env.VALUES_ENV_FILE }} > rendered-dev.yaml
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
@@ -79,7 +85,8 @@ jobs:
           helm upgrade --install ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops \
             --namespace ${{ env.NAMESPACE }} \
             --create-namespace \
-            --values ${{ env.VALUES_FILE }} \
+            --values ${{ env.VALUES_BASE_FILE }} \
+            --values ${{ env.VALUES_ENV_FILE }} \
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ env.IMAGE_TAG }} \
             --set image.pullPolicy=IfNotPresent \

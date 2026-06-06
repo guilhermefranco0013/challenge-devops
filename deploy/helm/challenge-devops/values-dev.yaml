@@ -6,11 +6,11 @@ replicaCount: 1
 
 image:
   repository: challenge-devops
-  pullPolicy: dev
+  pullPolicy: IfNotPresent
   tag: dev
 
 service:
-  type: LoadBalancer
+  type: NodePort
   port: 80
 
 containerPort: 8000
@@ -19,4 +19,3 @@ otel:
   endpoint: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318"
   serviceName: "challenge-devops-api"
   environment: "dev"
-

@@ -1,13 +1,13 @@
-environment: prod
+environment: dev
 
-namespace: prod
+namespace: dev
 
-replicaCount: 3
+replicaCount: 1
 
 image:
   repository: challenge-devops
   pullPolicy: IfNotPresent
-  tag: prod
+  tag: latest
 
 service:
   type: NodePort
@@ -18,4 +18,4 @@ containerPort: 8000
 otel:
   endpoint: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318"
   serviceName: "challenge-devops-api"
-  environment: "prod"
+  environment: "dev"
