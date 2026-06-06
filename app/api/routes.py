@@ -30,7 +30,7 @@ async def health():
 
     return {
         "status": "ok",
-        "message": "Service is healthy",
+        "message": "Service is completely healthy",
         "service": "challenge-devops",
         "version": "1.0.0",
         "uptime": "0d 0h 0m",

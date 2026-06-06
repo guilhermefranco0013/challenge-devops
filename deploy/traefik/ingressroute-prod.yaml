@@ -15,5 +15,4 @@ spec:
 
       services:
         - name: challenge-devops-prod-service
-          port: 3200
-          
+          port: 80

@@ -89,7 +89,7 @@ jobs:
             --values ${{ env.VALUES_ENV_FILE }} \
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ env.IMAGE_TAG }} \
-            --set image.pullPolicy=IfNotPresent \
+            --set image.pullPolicy=Always \
             --wait --timeout 15m --atomic
 
       - name: Wait for rollout availability
