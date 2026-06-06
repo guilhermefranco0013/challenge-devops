@@ -29,8 +29,13 @@ spec:
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+
           resources:
-            {{- toYaml .Values.resources | nindent 6 }}
+          {{- toYaml .Values.resources | nindent 6 }}
 
           envFrom:
             - configMapRef:
@@ -74,5 +79,5 @@ spec:
               path: /health
               port: {{ .Values.containerPort }}
 
-          failureThreshold: 30
-          periodSeconds: 5
+            failureThreshold: 30
+            periodSeconds: 5
