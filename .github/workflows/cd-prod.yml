@@ -6,7 +6,8 @@ name: CD PROD
 permissions:
   contents: read
   packages: write
-
+  id-token: write
+  
 jobs:
   deploy-prod:
     runs-on: [self-hosted, Linux, X64, kind, devops]

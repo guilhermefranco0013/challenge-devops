@@ -4,7 +4,6 @@ kind: Deployment
 
 metadata:
   name: {{.Release.Name}}
-  namespace: {{ .Values.namespace }}
 
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -30,6 +29,9 @@ spec:
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 
+          resources:
+            {{- toYaml .Values.resources | nindent 6 }}
+
           envFrom:
             - configMapRef:
                 name: challenge-devops-config
@@ -46,7 +48,7 @@ spec:
               value: {{ .Values.otel.serviceName | quote }}
 
             - name: DEPLOYMENT_ENVIRONMENT
-              value: {{ .Values.otel.environment | quote }}
+              value: {{ .Values.environment | quote }}
 
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
@@ -57,8 +59,20 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.containerPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
 
           livenessProbe:
             httpGet:
               path: /health
               port: {{ .Values.containerPort }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.containerPort }}
+
+          failureThreshold: 30
+          periodSeconds: 5

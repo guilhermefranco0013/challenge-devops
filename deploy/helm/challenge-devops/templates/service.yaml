@@ -4,7 +4,6 @@ kind: Service
 
 metadata:
   name: {{ .Release.Name }}-service
-  namespace: {{ .Values.namespace }}
 
   annotations:
     prometheus.io/scrape: "true"

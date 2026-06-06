@@ -17,7 +17,7 @@ async def root():
         "status": "ok",
         "message": "Service is healthy",
         "service": "challenge-devops",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "uptime": "0d 0h 0m",
         "environment": APP_ENV,
     }
@@ -32,7 +32,7 @@ async def health():
         "status": "ok",
         "message": "Service is completely healthy",
         "service": "challenge-devops",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "uptime": "0d 0h 0m",
         "environment": APP_ENV,
     }

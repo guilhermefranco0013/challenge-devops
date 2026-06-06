@@ -3,9 +3,8 @@ kind: ConfigMap
 
 metadata:
   name: challenge-devops-config
-  namespace: {{ .Values.namespace }}
 
 data:
-  APP_NAME : challenge-devops
+  APP_NAME: challenge-devops
   APP_ENV: {{ .Values.environment | quote }}
   LOG_LEVEL: INFO
