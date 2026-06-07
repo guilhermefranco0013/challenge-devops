@@ -91,7 +91,7 @@ jobs:
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ env.IMAGE_TAG }} \
             --set image.pullPolicy=Always \
-            --wait --timeout 15m 
+            --wait --timeout 15m --atomic
 
       - name: Wait for rollout availability
         run: |
