@@ -10,7 +10,6 @@ COPY app/requirements.txt .
 
 RUN pip install \
     --no-cache-dir \
-    --user \
     -r requirements.txt
 
 # ========================== #
@@ -24,25 +23,18 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copia dependências instaladas no builder
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /usr/local /usr/local
 
-ENV PATH=/root/.local/bin:$PATH
-
-# Cria usuário não-root
 RUN useradd \
     --system \
     --uid 10001 \
     --create-home \
     appuser
 
-# Copia aplicação
 COPY . /app
 
-# Ajusta permissões
 RUN chown -R appuser:appuser /app
 
-# Executa como usuário não-root
 USER appuser
 
 EXPOSE 8000
