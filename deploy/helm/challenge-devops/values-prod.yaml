@@ -2,5 +2,10 @@ environment: prod
 
 replicaCount: 3
 
-otel:
-  environment: prod
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi

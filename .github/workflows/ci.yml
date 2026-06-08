@@ -1,25 +1,30 @@
 name: CI Pipeline
 
-"on":
+on:
   push:
     branches:
-      - main
       - develop
+      - main
+
   pull_request:
     branches:
-      - main
       - develop
+      - main
 
 permissions:
   contents: read
+  packages: write
   security-events: write
+  id-token: write
 
 jobs:
   quality-security-build:
     runs-on: [self-hosted, Linux, X64, kind, devops]
 
     env:
-      IMAGE_NAME: challenge-devops
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository_owner }}/challenge-devops
+      IMAGE_TAG: ${{ github.sha }}
       TRIVY_SEVERITY: HIGH,CRITICAL
 
     steps:
@@ -30,78 +35,77 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
+          cache: pip
           cache-dependency-path: app/requirements.txt
 
-      - name: Create project virtual environment
-        run: |
-          python -m venv .venv
+      - name: Create virtual environment
+        run: python -m venv .venv
 
-      - name: Install dependencies into the project venv
+      - name: Install dependencies
         run: |
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install -r app/requirements.txt
-          python -m pip install ruff==0.12.0 black==25.1.0 isort==5.13.0
+          pip install -r app/requirements.txt
+          pip install ruff==0.12.0 black==25.1.0 isort==5.13.0 pytest
 
-      - name: Run Ruff
+      - name: Ruff
         run: |
           . .venv/bin/activate
           ruff check app app/tests
 
-      - name: Run Black check
+      - name: Black
         run: |
           . .venv/bin/activate
           black --check app app/tests
 
-      - name: Run Isort check
+      - name: Isort
         run: |
           . .venv/bin/activate
           isort --check-only app app/tests
 
-      - name: Validate application imports
+      - name: Validate imports
         run: |
           . .venv/bin/activate
           python -c "from app.main import app"
 
-      - name: Run tests (fail fast)
+      - name: Run tests
         run: |
           . .venv/bin/activate
           pytest -x -q
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image with Buildx cache
-        run: |
-          docker buildx build \
-            --load \
-            --cache-from=type=gha \
-            --cache-to=type=gha,mode=max \
-            -t $IMAGE_NAME \
-            -f deploy/docker/Dockerfile .
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trivy filesystem scan
+      - name: Build and Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy Image Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          scan-type: fs
-          scan-ref: .
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: table
           severity: ${{ env.TRIVY_SEVERITY }}
           exit-code: 0
 
-      - name: Trivy image scan
+      - name: Trivy SARIF
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.IMAGE_NAME }}
-          format: table
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: 0
-
-      - name: Trivy image SARIF export
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: sarif
           output: trivy-results.sarif
           severity: ${{ env.TRIVY_SEVERITY }}
@@ -110,20 +114,27 @@ jobs:
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.IMAGE_NAME }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: spdx-json
           output: trivy-sbom.spdx.json
 
-      - name: Upload Trivy security artifacts
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image
+        run: |
+          cosign sign --yes \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Upload Security Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: trivy-security-artifacts
           path: |
-            trivy-sbom.spdx.json
             trivy-results.sarif
-          if-no-files-found: warn
+            trivy-sbom.spdx.json
 
-      - name: Upload SARIF to GitHub Security
+      - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
