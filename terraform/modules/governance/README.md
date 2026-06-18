@@ -1,75 +1,122 @@
-# Governance Module
+# Terraform Module: governance
 
-Responsável por implementar governança básica dos namespaces Kubernetes.
+## Objetivo
 
-Recursos:
+Implementar políticas de governança básica para namespaces Kubernetes, garantindo controle de recursos e limites de consumo por container.
 
-- ResourceQuota
-- LimitRange
+---
 
-## Inputs
+## Recursos Gerenciados
 
-| Nome | Tipo |
-|--------|--------|
-| namespace | string |
-| requests_cpu | string |
-| requests_memory | string |
-| limits_cpu | string |
-| limits_memory | string |
-| default_cpu | string |
-| default_memory | string |
-| max_cpu | string |
-| max_memory | string |
+| Recurso | Tipo | Descrição |
+|---|---|---|
+| `kubernetes_resource_quota.this` | `kubernetes_resource_quota` | Limita o consumo agregado de recursos do namespace (CPU, memória, pods) |
+| `kubernetes_limit_range.this` | `kubernetes_limit_range` | Define limites padrão e máximos para containers individuais |
 
-## Outputs
+---
 
-| Nome |
-|--------|
-| resource_quota_name |
-| limit_range_name |
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+## Como Funciona
 
-| Name | Version |
-| ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.32 |
+### ResourceQuota
+
+Controla o consumo **agregado** de todos os pods dentro do namespace:
+
+- `requests.cpu` — Total de CPU reservada
+- `requests.memory` — Total de memória reservada
+- `limits.cpu` — Limite máximo de CPU
+- `limits.memory` — Limite máximo de memória
+- `pods` — Quantidade máxima de pods (fixo em 20)
+
+### LimitRange
+
+Controla o consumo **individual** de cada container:
+
+- `default` — Valores aplicados quando o container não define `resources`
+- `max` — Valores máximos permitidos por container
+
+---
+
+## Entradas (Inputs)
+
+| Nome | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `namespace` | `string` | ✅ | Namespace alvo |
+| `requests_cpu` | `string` | ✅ | CPU total reservada (ex: `"250m"`) |
+| `requests_memory` | `string` | ✅ | Memória total reservada (ex: `"256Mi"`) |
+| `limits_cpu` | `string` | ✅ | Limite máximo de CPU (ex: `"500m"`) |
+| `limits_memory` | `string` | ✅ | Limite máximo de memória (ex: `"512Mi"`) |
+| `default_cpu` | `string` | ✅ | CPU padrão por container (ex: `"100m"`) |
+| `default_memory` | `string` | ✅ | Memória padrão por container (ex: `"128Mi"`) |
+| `max_cpu` | `string` | ✅ | CPU máxima por container (ex: `"500m"`) |
+| `max_memory` | `string` | ✅ | Memória máxima por container (ex: `"512Mi"`) |
+
+---
+
+## Saídas (Outputs)
+
+| Nome | Descrição |
+|---|---|
+| `resource_quota_name` | Nome do ResourceQuota criado |
+| `limit_range_name` | Nome do LimitRange criado |
+
+---
+
+## Exemplo de Uso
+
+```hcl
+module "dev_governance" {
+  source = "../../modules/governance"
+
+  namespace = "dev"
+
+  requests_cpu    = "250m"
+  requests_memory = "256Mi"
+
+  limits_cpu    = "500m"
+  limits_memory = "512Mi"
+
+  default_cpu    = "100m"
+  default_memory = "128Mi"
+
+  max_cpu    = "500m"
+  max_memory = "512Mi"
+}
+```
+
+---
+
+## Uso na Plataforma
+
+| Environment | requests.cpu | requests.memory | limits.cpu | limits.memory | default.cpu | default.memory | max.cpu | max.memory |
+|---|---|---|---|---|---|---|---|---|
+| `dev` | 250m | 256Mi | 500m | 512Mi | 100m | 128Mi | 500m | 512Mi |
+| `hml` | 1000m | 1024Mi | 2000m | 2048Mi | 500m | 512Mi | 2000m | 2048Mi |
+| `prod` | 3000m | 3072Mi | 4000m | 4096Mi | 2000m | 2048Mi | 4000m | 4096Mi |
+| `observability` | 2 | 2Gi | 4 | 6Gi | 500m | 512Mi | 2 | 2Gi |
+| `traefik` | 250m | 256Mi | 500m | 512Mi | 100m | 128Mi | 500m | 512Mi |
+
+---
+
+## Boas Práticas
+
+1. **ResourceQuota + LimitRange sempre juntos**: ResourceQuota sozinho não impede que um único container consuma todos os recursos. LimitRange sozinho não impede consumo agregado excessivo.
+2. **Valores realistas**: Baseie os valores em métricas reais de consumo (kubectl top pods, Prometheus) para evitar overprovisioning.
+3. **QoS Classes**: A combinação de `requests` e `limits` define a classe de QoS do pod:
+   - `requests == limits` → **Guaranteed**
+   - `requests < limits` → **Burstable**
+   - sem requests/limits → **BestEffort**
+
+---
 
 ## Providers
 
-| Name | Version |
-| ---- | ------- |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | ~> 2.32 |
+| Provider | Versão |
+|---|---|
+| `hashicorp/kubernetes` | `~> 2.32` |
 
-## Modules
+---
 
-No modules.
+## ADRs Relacionadas
 
-## Resources
-
-| Name | Type |
-| ---- | ---- |
-| [kubernetes_limit_range.this](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/limit_range) | resource |
-| [kubernetes_resource_quota.this](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/resource_quota) | resource |
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_default_cpu"></a> [default\_cpu](#input\_default\_cpu) | The default amount of CPU for the governance resources. | `string` | n/a | yes |
-| <a name="input_default_memory"></a> [default\_memory](#input\_default\_memory) | The default amount of memory for the governance resources. | `string` | n/a | yes |
-| <a name="input_limits_cpu"></a> [limits\_cpu](#input\_limits\_cpu) | The amount of CPU limited for the governance resources. | `string` | n/a | yes |
-| <a name="input_limits_memory"></a> [limits\_memory](#input\_limits\_memory) | The amount of memory limited for the governance resources. | `string` | n/a | yes |
-| <a name="input_max_cpu"></a> [max\_cpu](#input\_max\_cpu) | The maximum amount of CPU for the governance resources. | `string` | n/a | yes |
-| <a name="input_max_memory"></a> [max\_memory](#input\_max\_memory) | The maximum amount of memory for the governance resources. | `string` | n/a | yes |
-| <a name="input_namespace"></a> [namespace](#input\_namespace) | The namespace where the governance resources will be created. | `string` | n/a | yes |
-| <a name="input_requests_cpu"></a> [requests\_cpu](#input\_requests\_cpu) | The amount of CPU requested for the governance resources. | `string` | n/a | yes |
-| <a name="input_requests_memory"></a> [requests\_memory](#input\_requests\_memory) | The amount of memory requested for the governance resources. | `string` | n/a | yes |
-
-## Outputs
-
-| Name | Description |
-| ---- | ----------- |
-| <a name="output_limit_range_name"></a> [limit\_range\_name](#output\_limit\_range\_name) | LimitRange name |
-| <a name="output_resource_quota_name"></a> [resource\_quota\_name](#output\_resource\_quota\_name) | ResourceQuota name |
-<!-- END_TF_DOCS -->
+- **ADR-001**: Terraform como ferramenta oficial de IaC
+- **ADR-004**: Módulos reutilizáveis
