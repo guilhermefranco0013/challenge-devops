@@ -1,9 +1,9 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/guilhermefranco0013/challenge-devops
+  repository: "REQUIRED"
   pullPolicy: Always
-  tag: latest
+  tag: "REQUIRED"
 
 imagePullSecrets:
   - name: ghcr-pull-secret
