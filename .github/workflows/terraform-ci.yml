@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "terraform/**"
+      - ".github/workflows/terraform-ci.yml"
     branches:
       - develop
       - main
@@ -11,6 +12,7 @@ on:
   pull_request:
     paths:
       - "terraform/**"
+      - ".github/workflows/terraform-ci.yml"
     branches:
       - develop
       - main
