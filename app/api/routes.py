@@ -15,7 +15,7 @@ async def root():
 
     return {
         "status": "ok",
-        "message": "Service is running and new version 1.0.2 deployed successfully",
+        "message": "Service is running and new version 1.0.2 deployed successfully.",
         "service": "challenge-devops",
         "version": "1.0.2",
         "environment": APP_ENV,
@@ -29,7 +29,7 @@ async def health():
 
     return {
         "status": "ok",
-        "message": "Service is running and new version 1.0.2 deployed successfully",
+        "message": "Service is running and new version 1.0.2 deployed successfully.",
         "service": "challenge-devops",
         "version": "1.0.2",
         "environment": APP_ENV,
