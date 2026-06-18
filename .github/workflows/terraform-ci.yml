@@ -113,14 +113,14 @@ jobs:
       - name: Checkov (Terraform)
         run: |
           checkov \
-            --config-file .checkov.yml \
+            --config-file terraform/.checkov.yml\
             -d .
 
       - name: Checkov SARIF
         continue-on-error: true
         run: |
           checkov \
-            --config-file .checkov.yml \
+            --config-file terraform/.checkov.yml\
             -d . \
             --output sarif \
             --output-file-path checkov-results.sarif
