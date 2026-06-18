@@ -1,0 +1,134 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    paths:
+      - "terraform/**"
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    paths:
+      - "terraform/**"
+    branches:
+      - develop
+      - main
+
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: [self-hosted, Linux, X64, kind, devops]
+
+    strategy:
+      matrix:
+        environment:
+          - dev
+          - hml
+          - prod
+          - security
+          - observability
+          - traefik
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.6
+
+      - name: Terraform Format
+        run: terraform fmt -recursive -check
+        working-directory: terraform
+
+      - name: Terraform Format Check
+        run: echo "✅ terraform fmt -recursive -check passed"
+
+      - name: Terraform Init
+        run: terraform init -input=false
+        working-directory: terraform/environments/${{ matrix.environment }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: terraform/environments/${{ matrix.environment }}
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -no-color
+        working-directory: terraform/environments/${{ matrix.environment }}
+        continue-on-error: false
+        env:
+          TF_VAR_ghcr_username: ${{ secrets.GHCR_USERNAME }}
+          TF_VAR_ghcr_password: ${{ secrets.GHCR_PASSWORD }}
+          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  lint:
+    name: Lint
+    runs-on: [self-hosted, Linux, X64, kind, devops]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: TFLint (Namespace Module)
+        run: tflint --config=../../.tflint.hcl --format=compact
+        working-directory: terraform/modules/namespace
+
+      - name: TFLint (Governance Module)
+        run: tflint --config=../../.tflint.hcl --format=compact
+        working-directory: terraform/modules/governance
+
+      - name: TFLint (Platform Module)
+        run: tflint --config=../../.tflint.hcl --format=compact
+        working-directory: terraform/modules/platform
+
+      - name: TFLint (Observability Module)
+        run: tflint --config=../../.tflint.hcl --format=compact
+        working-directory: terraform/modules/observability
+
+      - name: TFLint (Security Module)
+        run: tflint --config=../../.tflint.hcl --format=compact
+        working-directory: terraform/modules/security
+
+  security:
+    name: Security
+    runs-on: [self-hosted, Linux, X64, kind, devops]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkov (Terraform)
+        run: |
+          checkov \
+            --config-file .checkov.yml \
+            -d .
+
+      - name: Checkov SARIF
+        continue-on-error: true
+        run: |
+          checkov \
+            --config-file .checkov.yml \
+            -d . \
+            --output sarif \
+            --output-file-path checkov-results.sarif
+
+      - name: Upload Checkov SARIF
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov

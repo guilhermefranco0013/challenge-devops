@@ -1,0 +1,17 @@
+Leia sempre:
+
+.spec/context/project-context.md
+
+.spec/architecture/architecture.md
+
+Siga os agentes da pasta:
+
+.spec/agents/
+
+Priorize:
+
+- simplicidade
+- manutenibilidade
+- segurança
+- evitar overengineering
+- boas praticas

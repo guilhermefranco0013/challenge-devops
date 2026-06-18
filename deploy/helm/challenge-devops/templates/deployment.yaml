@@ -26,6 +26,11 @@ spec:
       securityContext:
         fsGroup: 10001
 
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+
       nodeSelector:
         role: platform-app
 

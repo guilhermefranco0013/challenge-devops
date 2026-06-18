@@ -2,11 +2,17 @@ server:
   nodeSelector:
     role: platform-observability
 
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
 alertmanager:
   enabled: false
 
-path:
+pushgateway:
   enabled: false
-
-adminUser: admin
-adminPassword: admin123
