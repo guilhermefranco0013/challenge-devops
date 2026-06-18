@@ -1,5 +1,8 @@
 environment: hml
 
+imagePullSecrets:
+  - name: ghcr-pull-secret
+
 replicaCount: 2
 
 resources:
