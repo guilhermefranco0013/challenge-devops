@@ -1,0 +1,17 @@
+# Tempo Helm values
+#
+# Recursos definidos para integração com
+# ResourceQuota e LimitRange do namespace
+# observability.
+#
+# Sprint 4.1 - Observability Hardening
+
+tempo:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+    limits:
+      cpu: 500m
+      memory: 1536Mi

@@ -1,9 +1,11 @@
 replicaCount: 1
 
 image:
-  repository: challenge-devops
+  repository: ghcr.io/guilhermefranco0013/challenge-devops
   pullPolicy: Always
   tag: latest
+
+imagePullSecrets: []
 
 service:
   type: NodePort

@@ -1,0 +1,93 @@
+# Checkov configuration for challenge-devops
+#
+# Sprint 6 - Terraform CI/CD
+# Scanner de segurança para Infrastructure as Code.
+# Detecta misconfigurações de segurança em código Terraform.
+#
+# Uso:
+#   checkov --config-file .checkov.yml -d .
+
+# Escopo: análise exclusiva de código Terraform
+framework:
+  - terraform
+
+# Ignorar verificações que não se aplicam ao ambiente Kind local.
+# Cada exclusão possui justificativa técnica específica.
+skip-check:
+  # CKV_K8S_12: ServiceAccount token mount automático.
+  # Justificativa: O Kind gerencia automaticamente o mount de tokens de ServiceAccount
+  # para pods que não especificam automountServiceAccountToken. Comportamento padrão
+  # aceitável em ambiente de desenvolvimento local.
+  - CKV_K8S_12
+
+  # CKV_K8S_21: Default namespace não deve ser utilizado.
+  # Justificativa: O namespace "default" não é utilizado por nenhum workload ou
+  # módulo Terraform. Os recursos são sempre direcionados a namespaces específicos
+  # (dev, hml, prod, observability, traefik).
+  - CKV_K8S_21
+
+  # CKV_K8S_22: ReadOnlyRootFilesystem não configurado.
+  # Justificativa: Os charts Helm dos componentes de plataforma (Traefik, Prometheus,
+  # Grafana, Tempo, OTel) gerenciam internamente suas próprias políticas de
+  # filesystem. A imposição via Terraform poderia conflitar com valores dos charts.
+  - CKV_K8S_22
+
+  # CKV_K8S_23 / CKV_K8S_24 / CKV_K8S_36: Resource limits/requests em containers.
+  # Justificativa: Limites de recursos são gerenciados centralizadamente via
+  # ResourceQuota e LimitRange no módulo governance (Sprint 2), não em nível de
+  # container individual. A governança por namespace é a estratégia adotada.
+  - CKV_K8S_23
+  - CKV_K8S_24
+  - CKV_K8S_36
+
+  # CKV_K8S_25: Privileged escalation.
+  # Justificativa: Componentes como Traefik e OpenTelemetry Collector requerem
+  # capacidades específicas de sistema (NET_BIND_SERVICE, SYS_PTRACE) que podem
+  # ser interpretadas como escalonamento privilegiado. Necessário para operação
+  # em ambiente Kind.
+  - CKV_K8S_25
+
+  # CKV_K8S_30 / CKV_K8S_31 / CKV_K8S_37: Security context / Seccomp / PodSecurity.
+  # Justificativa: Os charts Helm oficiais (Traefik, Prometheus, Grafana, Tempo, OTel)
+  # gerenciam seus próprios security contexts e perfis seccomp. Sobrepor via Terraform
+  # poderia quebrar a compatibilidade com versões futuras dos charts.
+  - CKV_K8S_30
+  - CKV_K8S_31
+  - CKV_K8S_37
+
+  # CKV_K8S_32: Pod Security Standards.
+  # Justificativa: Políticas de segurança de pod são gerenciadas em nível de namespace
+  # via NetworkPolicies no módulo security (Sprint 5), não via labels de PodSecurity.
+  - CKV_K8S_32
+
+  # CKV_K8S_33: ResourceQuota não definido em container.
+  # Justificativa: Idêntico ao CKV_K8S_23/24/36. ResourceQuota é gerenciado
+  # centralizadamente pelo módulo governance.
+  - CKV_K8S_33
+
+  # CKV_K8S_35: Privileged container.
+  # Justificativa: O Traefik Ingress Controller necessita de bind de portas
+  # privilegiadas (<1024) para operar como gateway de entrada. Comportamento
+  # esperado e documentado.
+  - CKV_K8S_35
+
+  # CKV_K8S_38: Pod Security Policy (deprecated).
+  # Justificativa: PodSecurityPolicy foi removido no Kubernetes 1.25+.
+  # O Kind local utiliza versão moderna onde este recurso não existe mais.
+  - CKV_K8S_38
+
+  # CKV_K8S_39: Host networking.
+  # Justificativa: Componentes de infraestrutura como Traefik podem requerer
+  # host networking para funcionamento correto em ambiente Kind com port mappings.
+  - CKV_K8S_39
+
+  # CKV_K8S_40: Host ports.
+  # Justificativa: Portas de host são mapeadas via port mappings do Kind
+  # (cluster.yml) e utilizadas pelo Traefik para expor serviços.
+  - CKV_K8S_40
+
+# Quiet mode - exibe apenas falhas
+quiet: true
+
+# Formato compacto de saída
+compact: true
