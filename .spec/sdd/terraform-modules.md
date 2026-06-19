@@ -6,207 +6,243 @@ Cada módulo possui responsabilidade única e ownership claramente definido, seg
 
 ---
 
-# Module: Namespace
+## Visão Geral
+
+| Módulo | Provider | Responsabilidade | Status |
+|---|---|---|---|
+| [namespace](#module-namespace) | kubernetes | Namespace, Labels, Annotations | ✅ |
+| [governance](#module-governance) | kubernetes | ResourceQuota, LimitRange | ✅ |
+| [security](#module-security) | kubernetes | NetworkPolicies, GHCR Pull Secret | ✅ |
+| [platform](#module-platform) | helm | Traefik (Ingress Controller) | ✅ |
+| [observability](#module-observability) | helm | Prometheus, Grafana, Tempo, OTel Collector | ✅ |
+
+---
+
+## Module: Namespace
 
 Responsável pelo gerenciamento de namespaces Kubernetes.
 
-## Recursos Gerenciados
+### Recursos Gerenciados
 
-* Namespace
-* Labels
-* Annotations
+| Recurso | Tipo |
+|---|---|
+| `kubernetes_namespace.this` | Namespace |
+| metadata.labels | map(string) |
+| metadata.annotations | map(string) |
 
-## Entradas
+### Entradas
 
-* namespace_name
-* labels
-* annotations
+| Nome | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `namespace_name` | string | ✅ | Nome do namespace |
+| `labels` | map(string) | ✅ | Labels para organização |
+| `annotations` | map(string) | ❌ | Annotations para metadados (default: {}) |
 
-## Saídas
+### Saídas
 
-* namespace_name
-* namespace_uid
+| Nome | Descrição |
+|---|---|
+| `namespace_name` | Nome do namespace criado |
+| `namespace_uid` | UID do namespace criado |
 
-## Ownership
+### Dependências
+
+Nenhuma.
+
+### Ownership
 
 Terraform
 
 ---
 
-# Module: Governance
+## Module: Governance
 
 Responsável pela governança de recursos dos namespaces Kubernetes.
 
-## Recursos Gerenciados
+### Recursos Gerenciados
 
-* ResourceQuota
-* LimitRange
+| Recurso | Tipo |
+|---|---|
+| `kubernetes_resource_quota.this` | ResourceQuota |
+| `kubernetes_limit_range.this` | LimitRange |
 
-## Entradas
+### Entradas
 
-* namespace
-* requests_cpu
-* requests_memory
-* limits_cpu
-* limits_memory
-* default_cpu
-* default_memory
-* max_cpu
-* max_memory
+| Nome | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `namespace` | string | ✅ | Namespace alvo |
+| `requests_cpu` | string | ✅ | CPU total reservada |
+| `requests_memory` | string | ✅ | Memória total reservada |
+| `limits_cpu` | string | ✅ | Limite máximo de CPU |
+| `limits_memory` | string | ✅ | Limite máximo de memória |
+| `default_cpu` | string | ✅ | CPU padrão por container |
+| `default_memory` | string | ✅ | Memória padrão por container |
+| `max_cpu` | string | ✅ | CPU máxima por container |
+| `max_memory` | string | ✅ | Memória máxima por container |
 
-## Saídas
+### Saídas
 
-* resource_quota_name
-* limit_range_name
+| Nome | Descrição |
+|---|---|
+| `resource_quota_name` | Nome do ResourceQuota criado |
+| `limit_range_name` | Nome do LimitRange criado |
 
-## Dependências
+### Dependências
 
-* Namespace Module
+- Namespace Module
 
-## Ownership
-
-Terraform
-
----
-
-# Module: Security
-
-Responsável pelos controles básicos de segurança da plataforma.
-
-## Recursos Gerenciados
-
-* NetworkPolicies (Default Deny + Allow Rules)
-* GHCR Pull Secret
-
-### NetworkPolicies
-
-* default-deny-ingress - Bloqueia todo tráfego de entrada por padrão
-* default-deny-egress - Bloqueia todo tráfego de saída por padrão
-* allow-dns-egress - Permite resolução DNS (porta 53 UDP → kube-system)
-* allow-ingress-from-traefik - Permite tráfego HTTP do Traefik (porta 8000 TCP)
-* allow-ingress-from-prometheus - Permite scraping do Prometheus (porta 8000 TCP)
-* allow-egress-to-otel - Permite envio de telemetria ao OTel (portas 4317/4318 TCP)
-
-### GHCR Pull Secret
-
-* ghcr-pull-secret - Secret tipo docker-registry para autenticação no GHCR
-
-## Entradas
-
-* namespace
-* enable_default_deny_ingress (bool, default: true)
-* enable_default_deny_egress (bool, default: true)
-* enable_allow_dns_egress (bool, default: true)
-* enable_allow_ingress_from_traefik (bool, default: true)
-* enable_allow_ingress_from_prometheus (bool, default: false)
-* enable_allow_egress_to_otel (bool, default: false)
-* enable_ghcr_secret (bool, default: false)
-* ghcr_registry_server (string, default: "ghcr.io")
-* ghcr_username (string)
-* ghcr_password (string, sensitive)
-
-## Saídas
-
-* namespace
-* ghcr_secret_name
-* default_deny_ingress_name
-* default_deny_egress_name
-* allow_dns_egress_name
-* allow_traefik_ingress_name
-* allow_prometheus_ingress_name
-* allow_otel_egress_name
-
-## Dependências
-
-* Namespace Module
-
-## Ownership
+### Ownership
 
 Terraform
 
 ---
 
-# Module: Platform
+## Module: Security
+
+Responsável pelos controles de segurança da plataforma.
+
+### Recursos Gerenciados
+
+| Recurso | Tipo | Descrição |
+|---|---|---|
+| `default-deny-ingress` | NetworkPolicy | Bloqueia todo tráfego de entrada |
+| `default-deny-egress` | NetworkPolicy | Bloqueia todo tráfego de saída |
+| `allow-dns-egress` | NetworkPolicy | DNS (53/UDP → kube-system) |
+| `allow-ingress-from-traefik` | NetworkPolicy | Traefik (8000/TCP → namespace traefik) |
+| `allow-ingress-from-prometheus` | NetworkPolicy | Prometheus (8000/TCP → observability) |
+| `allow-egress-to-otel` | NetworkPolicy | OTel (4317,4318/TCP → observability) |
+| `ghcr-pull-secret` | Secret (dockerconfigjson) | GHCR authentication |
+
+### Entradas
+
+| Nome | Tipo | Default | Descrição |
+|---|---|---|---|
+| `namespace` | string | — | Namespace alvo |
+| `enable_default_deny_ingress` | bool | true | Default Deny Ingress |
+| `enable_default_deny_egress` | bool | true | Default Deny Egress |
+| `enable_allow_dns_egress` | bool | true | Allow DNS |
+| `enable_allow_ingress_from_traefik` | bool | true | Allow Traefik |
+| `enable_allow_ingress_from_prometheus` | bool | false | Allow Prometheus |
+| `enable_allow_egress_to_otel` | bool | false | Allow OTel |
+| `enable_ghcr_secret` | bool | false | GHCR Pull Secret |
+| `ghcr_registry_server` | string | "ghcr.io" | GHCR registry |
+| `ghcr_username` | string | "" | GHCR username |
+| `ghcr_password` | string (sensitive) | "" | GHCR token |
+
+### Saídas
+
+| Nome | Descrição |
+|---|---|
+| `namespace` | Namespace gerenciado |
+| `ghcr_secret_name` | Nome do GHCR Pull Secret |
+| `default_deny_ingress_name` | Nome da política Default Deny Ingress |
+| `default_deny_egress_name` | Nome da política Default Deny Egress |
+| `allow_dns_egress_name` | Nome da política Allow DNS |
+| `allow_traefik_ingress_name` | Nome da política Allow Traefik |
+| `allow_prometheus_ingress_name` | Nome da política Allow Prometheus |
+| `allow_otel_egress_name` | Nome da política Allow OTel |
+
+### Dependências
+
+- Namespace Module (namespace alvo deve existir)
+
+### Ownership
+
+Terraform
+
+---
+
+## Module: Platform
 
 Responsável pelos componentes compartilhados da plataforma Kubernetes.
 
-## Recursos Gerenciados
+### Recursos Gerenciados
 
-* Traefik
-* Ingress Controller
-* Routing Layer
+| Recurso | Tipo |
+|---|---|
+| `helm_release.traefik` | Helm Release |
 
-## Entradas
+### Entradas
 
-* namespace
-* traefik_chart_version
-* replicas
-* web_node_port
-* websecure_node_port
-* node_selector_role
+| Nome | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `namespace` | string | ✅ | Namespace de instalação |
+| `traefik_chart_version` | string | ✅ | Versão do chart (atual: 40.2.0) |
+| `replicas` | number | ✅ | Réplicas (atual: 1) |
+| `web_node_port` | number | ✅ | NodePort HTTP (atual: 30080) |
+| `websecure_node_port` | number | ✅ | NodePort HTTPS (atual: 30443) |
+| `node_selector_role` | string | ✅ | Label para node selector (atual: platform-observability) |
 
-## Saídas
+### Saídas
 
-* traefik_release
+| Nome | Descrição |
+|---|---|
+| `traefik_release` | Nome da release Helm do Traefik |
 
-## Dependências
+### Dependências
 
-* Namespace Module
-* Governance Module
+- Namespace Module
+- Governance Module
 
-## Ownership
+### Ownership
 
 Terraform
 
 ---
 
-# Module: Observability
+## Module: Observability
 
 Responsável pela stack de observabilidade da plataforma.
 
-## Recursos Gerenciados
+### Recursos Gerenciados
 
-* Prometheus
-* Grafana
-* Tempo
-* OpenTelemetry Collector
+| Recurso | Chart | Repositório |
+|---|---|---|
+| `helm_release.prometheus` | prometheus (29.9.0) | prometheus-community |
+| `helm_release.grafana` | grafana (10.5.15) | grafana |
+| `helm_release.tempo` | tempo (1.24.4) | grafana |
+| `helm_release.otel_collector` | opentelemetry-collector (0.158.0) | open-telemetry |
 
-## Entradas
+### Entradas
 
-* namespace
-* prometheus_version
-* grafana_version
-* tempo_version
-* otel_collector_version
-* prometheus_values_file
-* grafana_values_file
-* tempo_values_file
-* otel_collector_values_file
+| Nome | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `namespace` | string | ✅ | Namespace da stack |
+| `prometheus_version` | string | ✅ | Versão do chart Prometheus |
+| `grafana_version` | string | ✅ | Versão do chart Grafana |
+| `tempo_version` | string | ✅ | Versão do chart Tempo |
+| `otel_collector_version` | string | ✅ | Versão do chart OTel Collector |
+| `prometheus_values_file` | string | ✅ | Caminho do values file |
+| `grafana_values_file` | string | ✅ | Caminho do values file |
+| `tempo_values_file` | string | ✅ | Caminho do values file |
+| `otel_collector_values_file` | string | ✅ | Caminho do values file |
 
-## Saídas
+### Saídas
 
-* prometheus_release
-* grafana_release
-* tempo_release
-* otel_collector_release
+| Nome | Descrição |
+|---|---|
+| `prometheus_release` | Nome da release Helm do Prometheus |
+| `grafana_release` | Nome da release Helm do Grafana |
+| `tempo_release` | Nome da release Helm do Tempo |
+| `otel_collector_release` | Nome da release Helm do OTel Collector |
 
-## Dependências
+### Dependências
 
-* Namespace Module
-* Governance Module
+- Namespace Module
+- Governance Module
 
-## Ownership
+### Evoluções Futuras
+
+- Loki
+- Promtail
+
+### Ownership
 
 Terraform
 
-## Evoluções Futuras
-
-* Loki
-* Promtail
-
 ---
 
-# Princípios
+## Princípios
 
 Todos os módulos seguem os seguintes princípios:
 
@@ -220,3 +256,17 @@ Todos os módulos seguem os seguintes princípios:
 Nenhum recurso pode possuir múltiplos responsáveis.
 
 A separação de responsabilidades é definida pelos documentos de arquitetura, ADRs e boundaries da plataforma.
+
+---
+
+## Estrutura de Arquivos
+
+Todo módulo deve conter:
+
+```text
+terraform/modules/<module-name>/
+├── main.tf          # Recursos do módulo
+├── variables.tf     # Variáveis de entrada
+├── outputs.tf       # Saídas do módulo
+├── versions.tf      # Versões do Terraform e providers
+└── README.md        # Documentação completa

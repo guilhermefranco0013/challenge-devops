@@ -39,6 +39,16 @@ Terraform
 
 ---
 
+## Sprint de Implementação
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 4 - Observability Foundation** | Criação do módulo, importação das releases existentes, convergência de estado | ✅ Concluída |
+| **Sprint 4.1 - Observability Hardening** | Definição de requests/limits para todos os componentes, validação QoS | ✅ Concluída |
+| **Sprint 6 - Terraform CI/CD** | Pipeline automatizado com fmt, validate, tflint, checkov, docs, plan, apply | ✅ Concluída |
+
+---
+
 ## Entradas (Inputs)
 
 | Nome | Tipo | Obrigatório | Descrição |
@@ -74,6 +84,23 @@ Terraform
 | Grafana | `10.5.15` | `deploy/observability/grafana-values.yaml` |
 | Tempo | `1.24.4` | `deploy/observability/tempo-values.yaml` |
 | OpenTelemetry Collector | `0.158.0` | `deploy/observability/otel-values.yaml` |
+
+---
+
+## QoS (Quality of Service)
+
+Após o hardening da Sprint 4.1, todos os componentes operam em modo **Burstable**:
+
+| Componente | QoS |
+|---|---|
+| Grafana | Burstable |
+| Prometheus | Burstable |
+| Tempo | Burstable |
+| OpenTelemetry Collector | Burstable |
+
+> **Lições aprendidas:**
+> - Tempo 1.24.4 exige configuração via `tempo.resources`
+> - Prometheus Server tem 2 containers no mesmo pod (prometheus-server e prometheus-server-configmap-reload), o que impacta o cálculo total de recursos
 
 ---
 
@@ -118,6 +145,19 @@ depends_on = [
 
 ---
 
+## Validações no Pipeline CI/CD
+
+Este módulo é validado pelo pipeline `terraform-ci.yml`:
+
+| Etapa | Ferramenta | Comando |
+|---|---|---|
+| Formatação | `terraform fmt -check` | `terraform fmt -check terraform/modules/observability/` |
+| Validação | `terraform validate` | `terraform validate terraform/modules/observability/` |
+| Lint | `tflint` | `tflint --config=terraform/.tflint.hcl terraform/modules/observability/` |
+| Segurança IaC | `checkov` | `checkov -d terraform/modules/observability/` |
+
+---
+
 ## Estratégia de Migração
 
 As releases existentes foram importadas para o Terraform State seguindo o fluxo:
@@ -156,10 +196,10 @@ terraform plan  # Deve retornar "No changes"
 
 ## Evolução Futura
 
-| Componente | Status |
-|---|---|
-| Loki | 📋 Planejado |
-| Promtail | 📋 Planejado |
+| Componente | Sprint | Status |
+|---|---|---|
+| Loki | Futuro | 📋 Planejado |
+| Promtail | Futuro | 📋 Planejado |
 
 ---
 
@@ -176,3 +216,12 @@ terraform plan  # Deve retornar "No changes"
 - **ADR-001**: Terraform como ferramenta oficial de IaC
 - **ADR-005**: Observabilidade instalada via Helm Provider do Terraform
 - **ADR-007**: Validação de convergência (No changes)
+
+---
+
+## Roadmap Futuro
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 7 - GitOps Foundation** | ArgoCD, Application of Applications, Sync Policies | 📋 Planejada |
+| **Sprint 8 - Cloud Foundation AWS** | S3 Backend, DynamoDB Locking, VPC, EKS | 📋 Planejada |

@@ -38,6 +38,15 @@ Terraform
 
 ---
 
+## Sprint de Implementação
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 3 - Platform** | Criação do módulo, Helm Provider, Traefik Helm Release, Terraform Import | ✅ Concluída |
+| **Sprint 6 - Terraform CI/CD** | Pipeline automatizado com fmt, validate, tflint, checkov, docs, plan, apply | ✅ Concluída |
+
+---
+
 ## Entradas (Inputs)
 
 | Nome | Tipo | Obrigatório | Descrição |
@@ -90,6 +99,19 @@ module "traefik_platform" {
 | web.nodePort | `30080` | Porta HTTP |
 | websecure.nodePort | `30443` | Porta HTTPS |
 | nodeSelector.role | `platform-observability` | Executa em node de observabilidade |
+
+---
+
+## Validações no Pipeline CI/CD
+
+Este módulo é validado pelo pipeline `terraform-ci.yml`:
+
+| Etapa | Ferramenta | Comando |
+|---|---|---|
+| Formatação | `terraform fmt -check` | `terraform fmt -check terraform/modules/platform/` |
+| Validação | `terraform validate` | `terraform validate terraform/modules/platform/` |
+| Lint | `tflint` | `tflint --config=terraform/.tflint.hcl terraform/modules/platform/` |
+| Segurança IaC | `checkov` | `checkov -d terraform/modules/platform/` |
 
 ---
 
@@ -149,3 +171,12 @@ terraform plan  # Deve retornar "No changes"
 - **ADR-001**: Terraform como ferramenta oficial de IaC
 - **ADR-003**: GitHub Actions como orquestrador de CI/CD
 - **ADR-005**: Observabilidade instalada via Helm Provider do Terraform
+
+---
+
+## Roadmap Futuro
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 7 - GitOps Foundation** | ArgoCD, Application of Applications, Sync Policies | 📋 Planejada |
+| **Sprint 8 - Cloud Foundation AWS** | S3 Backend, DynamoDB Locking, VPC, EKS | 📋 Planejada |

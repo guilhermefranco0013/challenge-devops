@@ -6,7 +6,7 @@ Definir a evolução da camada Terraform do projeto challenge-devops, garantindo
 
 ---
 
-# Sprint 1 - Foundation
+# Sprint 1 - Foundation ✅
 
 ## Objetivo
 
@@ -26,43 +26,35 @@ nodes:
 - role: worker (label: platform-observability)
 ```
 
-Provisionado via: `kind create cluster --config deploy/kind/cluster.yml`
-
 Evolução futura: gerenciamento do cluster via Terraform (terraform/bootstrap/).
 
 ## Entregas
 
 ### Providers
-
 * Kubernetes Provider
 
 ### Estrutura Terraform
-
-* bootstrap/ (futuro - cluster Kind via Terraform)
-* environments/
-* modules/
+* bootstrap/ (futuro)
+* environments/ (dev, hml, prod, observability, traefik, security)
+* modules/ (namespace, governance, platform, observability, security)
 
 ### Namespace Module
-
 * Namespace
 * Labels
 * Annotations
 
 ### Namespaces Gerenciados
+* DEV ✅
+* HML ✅
+* PROD ✅
+* OBSERVABILITY ✅
+* TRAEFIK ✅
 
-* DEV
-* HML
-* PROD
-* OBSERVABILITY
-* TRAEFIK
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 2 - Governance
+# Sprint 2 - Governance ✅
 
 ## Objetivo
 
@@ -71,381 +63,157 @@ Implementar governança básica para todos os namespaces da plataforma.
 ## Entregas
 
 ### Governance Module
-
 * ResourceQuota
 * LimitRange
 
 ### Ambientes Governados
+* DEV ✅
+* HML ✅
+* PROD ✅
+* OBSERVABILITY ✅
+* TRAEFIK ✅
 
-* DEV
-* HML
-* PROD
-* OBSERVABILITY
-* TRAEFIK
-
-### Validações Executadas
-
+### Validações
 * terraform fmt -recursive
 * terraform validate
 * terraform plan
 * terraform apply
-* terraform state list
 * kubectl get resourcequota -A
 * kubectl get limitrange -A
-* kubectl describe resourcequota
 
-## Resultado
-
-Todos os namespaces da plataforma possuem:
-
-* ResourceQuota
-* LimitRange
-
-gerenciados através do Terraform.
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 3 - Platform
+# Sprint 3 - Platform ✅
 
 ## Objetivo
 
 Provisionar o Ingress Controller Traefik através do Terraform utilizando o Helm Provider.
 
 ## Entregas
-
 * Helm Provider
 * Platform Module
-* Traefik Helm Release
-* Terraform Import
-* State Management
+* Traefik Helm Release (chart 40.2.0)
+* Terraform Import + State Convergence
 
-Validação Final:
+## Resultado
+```text
+No changes. Your infrastructure matches the configuration.
+```
 
-terrafrom plan
-
-Resultado:
-
-No changes.
-Your infrastructure matches the configuration.
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 4 - Observability Foundation
+# Sprint 4 - Observability Foundation ✅
 
 ## Objetivo
 
-Provisionar a stack de observabilidade através do Terraform.
+Provisionar a stack de observabilidade através do Terraform via Helm Provider.
 
 ## Entregas
 
 ### Observability Module
+| Componente | Chart Version |
+|---|---|
+| Prometheus | 29.9.0 |
+| Grafana | 10.5.15 |
+| Tempo | 1.24.4 |
+| OpenTelemetry Collector | 0.158.0 |
 
-* Prometheus
-* Grafana
-* Tempo
-* OpenTelemetry Collector
+### Estratégia
+1. Declarar recursos Terraform
+2. Importar releases existentes
+3. Validar estado (terraform plan → No changes)
+4. Convergir infraestrutura (terraform apply)
 
-Estratégia:
-
-- Declarar recursos Terraform
-- Importar releases existentes
-- Validar estado
-- Convergir infraestrutura
-
-### Ajustes de Governança
-
-Definição de:
-
-* requests.cpu
-* requests.memory
-* limits.cpu
-* limits.memory
-
-para todos os componentes da stack.
-
-## Resultado Esperado
-
-Terraform passa a ser responsável pela instalação e gerenciamento da observabilidade da plataforma.
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 4.1 - Observability Hardening
+# Sprint 4.1 - Observability Hardening ✅
 
 ## Objetivo
 
-Adequar a stack de observabilidade às políticas de governança
-implementadas na Sprint 2 através da definição explícita de
-requests e limits para todos os componentes observáveis.
+Adequar a stack de observabilidade às políticas de governança da Sprint 2 através da definição explícita de requests e limits.
 
-### Entregas
+## Entregas
+* Requests/limits para Prometheus, Grafana, Tempo, OTel Collector
+* Validação de ResourceQuota (consumo > 0)
+* Validação de QoS
 
-* Requests CPU
-* Requests Memory
-* Limits CPU
-* Limits Memory
-* Validação de ResourceQuota
-* Validação de Consumo
+## QoS Resultante
 
-### Observability Module
+| Componente | QoS |
+|---|---|
+| Grafana | Burstable |
+| Prometheus | Burstable |
+| Tempo | Burstable |
+| OpenTelemetry Collector | Burstable |
 
-* Prometheus
-* Grafana
-* Tempo
-* OpenTelemetry Collector
+## Lições Aprendidas
+- Tempo 1.24.4 exige configuração via `tempo.resources`
+- Prometheus Server tem 2 containers no mesmo pod
+- ResourceQuota + LimitRange impedem pods incompatíveis
 
-Estratégia:
-
-- Declarar recursos Terraform
-- Importar releases existentes
-- Validar estado
-- Convergir infraestrutura
-
-### Ajustes de Governança
-
-Definição de:
-
-* requests.cpu
-* requests.memory
-* limits.cpu
-* limits.memory
-
-para todos os componentes da stack.
-
-## Resultado Esperado
-
-Deve apresentar consumo diferente de zero para:
-
-kubectl describe resourcequota -n observability
-
-* requests.cpu
-* requests.memory
-* limits.cpu
-* limits.memory
-
-Validação QoS:
-
-* Grafana → Burstable
-* Prometheus → Burstable
-* Tempo → Burstable
-* OpenTelemetry Collector → Burstable
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 5 - Security
+# Sprint 5 - Security ✅
 
 ## Objetivo
 
-Implementar controles básicos de segurança da plataforma Kubernetes utilizando Terraform como única fonte de verdade para recursos de segurança compartilhados.
+Implementar controles básicos de segurança da plataforma Kubernetes.
 
-## Status
-
-✅ Concluída
-
----
-
-### Sprint 5.1 - Security Foundation
-
-Objetivo:
-
-Criar a estrutura do módulo Security e estabelecer a base para os controles de segurança da plataforma.
-
-Entregas:
-
+## Sprint 5.1 - Security Foundation ✅
 * Criação do módulo security
-* Definição das variáveis e outputs
+* Definição de variáveis e outputs
 * Estruturação dos recursos de NetworkPolicy
-* Preparação para gerenciamento de secrets compartilhados
 
-Validações:
-
-* terraform fmt -recursive
-* terraform validate
-* terraform plan
-
-## Status
-
-✅ Concluída
-
----
-
-### Sprint 5.2 - Network Segmentation
-
-Objetivo:
-
-Implementar isolamento de tráfego entre workloads através de NetworkPolicies.
-
-Entregas:
-
-* Default Deny Ingress
-* Default Deny Egress
+## Sprint 5.2 - Network Segmentation ✅
+* Default Deny Ingress + Egress
 * Isolamento entre namespaces
-* Validação do comportamento de bloqueio
+* Aplicado em: dev, hml, prod, observability, traefik
 
-Aplicado em:
+**Lição:** Namespace hardcoded ("dev") corrigido para `var.namespace`.
 
-✅ dev
-✅ hml
-✅ prod
-✅ observability
-✅ traefik
+## Sprint 5.3 - Explicit Traffic Allow Rules ✅
 
-Validações:
+| Namespace | DNS | Traefik | Prometheus | OTel |
+|---|---|---|---|---|
+| dev | ✅ | ✅ | ✅ | ✅ |
+| hml | ✅ | ✅ | ✅ | ✅ |
+| prod | ✅ | ✅ | ✅ | ✅ |
+| observability | ✅ | ✅ | ❌ | ❌ |
+| traefik | ✅ | ❌ | ❌ | ❌ |
 
-* kubectl get networkpolicy -A
-* kubectl describe networkpolicy
-* Testes de conectividade entre namespaces
+Variáveis de controle:
+- `enable_allow_dns_egress` (default: true)
+- `enable_allow_ingress_from_traefik` (default: true)
+- `enable_allow_ingress_from_prometheus` (default: false)
+- `enable_allow_egress_to_otel` (default: false)
 
-Resultado Esperado:
+## Sprint 5.4 - Registry Authentication ✅
+* GHCR Pull Secret implementado e ATIVO
+* Auto-ativação via `local.ghcr_configured`
+* Credenciais em `terraform/environments/security/terraform.tfvars`
+* CI/CD: variáveis `TF_VAR_ghcr_username` / `TF_VAR_ghcr_password`
+* Secret: `ghcr-pull-secret` em DEV, HML, PROD
 
-Todo tráfego passa a ser negado por padrão.
+## Resultado Final da Sprint 5
+- Security Module implementado ✅
+- NetworkPolicies gerenciadas por Terraform ✅
+- Modelo Default Deny aplicado ✅
+- Fluxos liberados (DNS, Traefik, Prometheus, OTel) ✅
+- GHCR Pull Secret ativo ✅
 
-### Lição aprendida
-
-Durante a implementação inicial das NetworkPolicies
-foi identificado um namespace hardcoded ("dev")
-no módulo security.
-
-O erro provocou tentativas de criação do mesmo
-recurso em múltiplos módulos.
-
-Correção aplicada:
-
-namespace = var.namespace
-
-Resultado:
-
-As policies passaram a ser criadas corretamente
-nos namespaces DEV, HML, PROD, OBSERVABILITY e TRAEFIK.
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-### Sprint 5.3 - Explicit Traffic Allow Rules
-
-Objetivo:
-
-Liberar apenas os fluxos necessários para funcionamento da plataforma,
-operando sob modelo Zero Trust.
-
-Entregas:
-
-* DNS Allow Rules (porta 53 UDP → kube-system)
-* Traefik → Aplicações (porta 8000 TCP)
-* Prometheus → Aplicações (porta 8000 TCP, scraping de métricas)
-* Aplicações → OpenTelemetry Collector (portas 4317/4318 TCP)
-
-Configuração por namespace:
-
-| Namespace      | DNS |  Traefik | Prometheus  | OTel |
-|----------------|-----|----------|-------------|------|
-| dev            | ✅  | ✅      | ✅         | ✅   |
-| hml            | ✅  | ✅      | ✅         | ✅   |
-| prod           | ✅  | ✅      | ✅         | ✅   |
-| observability  | ✅  | ✅      | ❌         | ❌   |
-| traefik        | ✅  | ❌      | ❌         | ❌   |
-
-Cada regra é controlada por variável booleana independente:
-
-* enable_allow_dns_egress
-* enable_allow_ingress_from_traefik
-* enable_allow_ingress_from_prometheus (default: false)
-* enable_allow_egress_to_otel (default: false)
-
-Validações:
-
-* Testes de acesso via Ingress
-* Testes de scraping Prometheus
-* Testes de envio de telemetry
-
-Resultado Esperado:
-
-Plataforma funcional operando sob modelo Zero Trust.
-
-## Status
-
-✅ Concluída
-
----
-
-### Sprint 5.4 - Registry Authentication
-
-Objetivo:
-
-Permitir consumo seguro de imagens privadas armazenadas no GitHub Container Registry.
-
-Entregas:
-
-* GHCR Pull Secret
-* Secret gerenciado pelo Terraform
-* Integração com workloads Kubernetes
-* Padronização para DEV, HML e PROD
-
-O recurso está implementado no módulo security e desabilitado por padrão (`enable_ghcr_secret = false`).
-A ativação requer configuração de credenciais GHCR via variáveis.
-
-Variáveis:
-
-* enable_ghcr_secret (bool, default: false)
-* ghcr_registry_server (string, default: "ghcr.io")
-* ghcr_username (string)
-* ghcr_password (string, sensitive)
-
-Validações:
-
-* kubectl get secret -A
-* Deploy utilizando imagem privada
-* Pull bem-sucedido a partir do GHCR
-
-Resultado Esperado:
-
-Namespaces preparados para consumo de imagens privadas.
-
-## Status
-
-✅ Concluída (aguardando configuração de credenciais GHCR para ativação)
-
----
-
-### Resultado Final da Sprint 5
-
-Objetivos atingidos:
-
-* Security Module implementado
-* NetworkPolicies gerenciadas por Terraform
-* Modelo Default Deny aplicado
-* Fluxos necessários liberados explicitamente (DNS, Traefik, Prometheus, OTel)
-* GHCR Pull Secret gerenciado por Terraform (código implementado)
-
-Resultado Esperado:
-
-Namespaces protegidos por políticas de rede e preparados para utilização de registries privados.
-
-## Status
-
-✅ Concluída
-
----
-
-# Sprint 6 - Terraform CI/CD
+# Sprint 6 - Terraform CI/CD ✅
 
 ## Objetivo
 
@@ -453,36 +221,26 @@ Automatizar validações e execuções Terraform.
 
 ## Entregas
 
-### Qualidade
+### Pipeline (.github/workflows/terraform-ci.yml)
+| Etapa | Ferramenta | Finalidade |
+|---|---|---|
+| Formatação | terraform fmt -check | Qualidade de código |
+| Validação | terraform validate | Consistência sintática |
+| Lint | tflint | Análise estática |
+| Segurança | checkov + SARIF | IaC security scanning |
+| Documentação | terraform-docs | Documentação automática |
+| Planejamento | terraform plan | Dry-run |
+| Aplicação | terraform apply | Provisionamento |
 
-* terraform fmt -check
-* terraform validate
-* tflint
+### Configurações
+* `terraform/.checkov.yml` — supressão de checks CKV_K8S_* não aplicáveis ao Kind
+* `terraform/.tflint.hcl` — preset recommended, regras de qualidade habilitadas
 
-### Segurança
-
-* checkov
-
-### Documentação
-
-* terraform-docs
-
-### Pipeline
-
-* terraform plan
-* terraform apply
-
-## Resultado Esperado
-
-Validação automatizada de toda alteração Terraform.
-
-## Status
-
-✅ Concluída
+## Status: ✅ Concluída
 
 ---
 
-# Sprint 7 - GitOps Foundation
+# Sprint 7 - GitOps Foundation 📋
 
 ## Objetivo
 
@@ -490,38 +248,31 @@ Implementar GitOps como modelo operacional para gerenciamento do cluster e deplo
 
 ## Escopo Previsto
 
-### Argo CD
-
-* Instalação do Argo CD no cluster
+### ArgoCD
+* Instalação do ArgoCD no cluster
 * Configuração de projeto
 
 ### Estrutura GitOps
-
 * Application of Applications pattern
 * Environment Promotion Strategy (DEV → HML → PROD)
 
 ### Operação
-
 * Sync Policies (auto-sync, prune, self-heal)
 * Drift Detection
 * Rollback automático
 
 ### Documentação
-
 * GitOps workflow documentation
 * Disaster recovery procedures
 
 ## Resultado Esperado
-
 Pipeline GitOps operacional com promoção entre ambientes.
 
-## Status
-
-📋 Planejada
+## Status: 📋 Planejada
 
 ---
 
-# Sprint 8 - Cloud Foundation (AWS)
+# Sprint 8 - Cloud Foundation (AWS) 📋
 
 ## Objetivo
 
@@ -530,18 +281,15 @@ Provisionar infraestrutura cloud AWS para hospedar a plataforma.
 ## Escopo Previsto
 
 ### Terraform Backend
-
 * S3 Backend para state remoto
 * DynamoDB State Locking
 
 ### Providers
-
 * AWS Provider
 * Kubernetes Provider
 * Helm Provider
 
 ### Foundation Resources
-
 * VPC
 * Subnets (pública e privada)
 * Route Tables
@@ -550,22 +298,13 @@ Provisionar infraestrutura cloud AWS para hospedar a plataforma.
 * IAM Roles
 
 ### Container Platform
-
 * ECR (container registry)
-* EKS (Kubernetes gerenciado)
+* EKS (Kubernetes gerenciado) ou EC2 + Kind
 
 ### Data Layer
-
 * RDS PostgreSQL
 
-### Observability
-
-* Integração cloud-native de observabilidade
-
 ## Resultado Esperado
-
 Plataforma completamente reproduzível em infraestrutura AWS.
 
-## Status
-
-📋 Planejada
+## Status: 📋 Planejada

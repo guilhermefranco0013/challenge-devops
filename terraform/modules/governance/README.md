@@ -36,6 +36,15 @@ Controla o consumo **individual** de cada container:
 
 ---
 
+## Sprint de Implementação
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 2 - Governance** | Criação do módulo, ResourceQuota e LimitRange para 5 namespaces | ✅ Concluída |
+| **Sprint 4.1 - Observability Hardening** | Definição de requests/limits para stack de observabilidade | ✅ Concluída |
+
+---
+
 ## Entradas (Inputs)
 
 | Nome | Tipo | Obrigatório | Descrição |
@@ -97,6 +106,19 @@ module "dev_governance" {
 
 ---
 
+## Validações no Pipeline CI/CD
+
+Este módulo é validado pelo pipeline `terraform-ci.yml`:
+
+| Etapa | Ferramenta | Comando |
+|---|---|---|
+| Formatação | `terraform fmt -check` | `terraform fmt -check terraform/modules/governance/` |
+| Validação | `terraform validate` | `terraform validate terraform/modules/governance/` |
+| Lint | `tflint` | `tflint --config=terraform/.tflint.hcl terraform/modules/governance/` |
+| Segurança IaC | `checkov` | `checkov -d terraform/modules/governance/` |
+
+---
+
 ## Boas Práticas
 
 1. **ResourceQuota + LimitRange sempre juntos**: ResourceQuota sozinho não impede que um único container consuma todos os recursos. LimitRange sozinho não impede consumo agregado excessivo.
@@ -120,3 +142,12 @@ module "dev_governance" {
 
 - **ADR-001**: Terraform como ferramenta oficial de IaC
 - **ADR-004**: Módulos reutilizáveis
+
+---
+
+## Roadmap Futuro
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 7 - GitOps Foundation** | ArgoCD, Application of Applications, Sync Policies | 📋 Planejada |
+| **Sprint 8 - Cloud Foundation AWS** | S3 Backend, DynamoDB Locking, VPC, EKS | 📋 Planejada |
