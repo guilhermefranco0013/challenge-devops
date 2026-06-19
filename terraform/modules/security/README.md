@@ -22,7 +22,7 @@ Terraform
 │   └── allow-egress-to-otel
 │
 └── GHCR Pull Secret (Sprint 5.4)
-    └── ghcr-pull-secret (docker-registry)
+    └── ghcr-pull-secret (docker-registry) ✅ ATIVO
 ```
 
 ---
@@ -42,9 +42,21 @@ Terraform
 
 ### GHCR Pull Secret
 
-| Recurso | Tipo | Descrição |
+| Recurso | Tipo | Descrição | Status |
+|---|---|---|---|
+| `ghcr-pull-secret` | `kubernetes.io/dockerconfigjson` | Autenticação no GitHub Container Registry | ✅ Ativo |
+
+---
+
+## Sprint de Implementação
+
+| Sprint | Descrição | Status |
 |---|---|---|
-| `ghcr-pull-secret` | `kubernetes.io/dockerconfigjson` | Autenticação no GitHub Container Registry |
+| **Sprint 5.1 - Security Foundation** | Criação do módulo, variáveis, outputs, estrutura NetworkPolicy | ✅ Concluída |
+| **Sprint 5.2 - Network Segmentation** | Default Deny Ingress + Egress, isolamento entre namespaces | ✅ Concluída |
+| **Sprint 5.3 - Explicit Traffic Allow Rules** | DNS, Traefik, Prometheus, OTel liberados por namespace | ✅ Concluída |
+| **Sprint 5.4 - Registry Authentication** | GHCR Pull Secret implementado e ATIVO com credenciais | ✅ Concluída |
+| **Sprint 6 - Terraform CI/CD** | Pipeline automatizado com fmt, validate, tflint, checkov, docs, plan, apply | ✅ Concluída |
 
 ---
 
@@ -102,20 +114,23 @@ Liberado apenas o necessário:
 
 | Namespace | Default Deny | DNS | Traefik | Prometheus | OTel | GHCR |
 |---|---|---|---|---|---|---|
-| `dev` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| `hml` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| `prod` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `dev` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hml` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `prod` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `observability` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | `traefik` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 
-> **Nota**: Namespace `observability` não precisa de scraping Prometheus (ele mesmo) nem envio ao OTel. Namespace `traefik` só precisa de DNS.
+> **Notas:**
+> - Namespace `observability`: não precisa de scraping Prometheus (ele mesmo) nem envio ao OTel
+> - Namespace `traefik`: só precisa de DNS
+> - GHCR ativo em DEV, HML, PROD (credenciais configuradas)
 
 ---
 
 ## Exemplo de Uso
 
 ```hcl
-# Namespace dev com todas as permissões
+# Namespace dev com todas as permissões + GHCR
 module "dev_security" {
   source = "../../modules/security"
 
@@ -129,9 +144,37 @@ module "dev_security" {
   enable_allow_ingress_from_prometheus = true
   enable_allow_egress_to_otel          = true
 
-  enable_ghcr_secret = false
+  # GHCR Pull Secret
+  enable_ghcr_secret   = true
+  ghcr_username        = var.ghcr_username
+  ghcr_password        = var.ghcr_password
 }
 ```
+
+---
+
+## GHCR Pull Secret — Status Atual
+
+O secret `ghcr-pull-secret` está **implementado e ATIVO** nos namespaces DEV, HML e PROD.
+
+**Mecanismo de auto-ativação:**
+
+```hcl
+locals {
+  ghcr_configured = var.ghcr_username != "" && var.ghcr_password != ""
+}
+
+module "dev_security" {
+  ...
+  enable_ghcr_secret = local.ghcr_configured  # true se credenciais preenchidas
+  ghcr_username      = var.ghcr_username
+  ghcr_password      = var.ghcr_password
+}
+```
+
+**Credenciais:**
+- **Local**: `terraform/environments/security/terraform.tfvars`
+- **CI/CD**: Variáveis `TF_VAR_ghcr_username` e `TF_VAR_ghcr_password` injetadas via secrets do GitHub
 
 ---
 
@@ -148,23 +191,16 @@ Este módulo depende de:
 
 ---
 
-## GHCR Pull Secret
+## Validações no Pipeline CI/CD
 
-O secret `ghcr-pull-secret` está **implementado porém desabilitado por padrão** (`enable_ghcr_secret = false`).
+Este módulo é validado pelo pipeline `terraform-ci.yml`:
 
-Para ativar:
-
-```hcl
-module "dev_security" {
-  source = "../../modules/security"
-
-  namespace = "dev"
-
-  enable_ghcr_secret = true
-  ghcr_username      = var.ghcr_username  # ou valor direto
-  ghcr_password      = var.ghcr_password  # sensitive
-}
-```
+| Etapa | Ferramenta | Comando |
+|---|---|---|
+| Formatação | `terraform fmt -check` | `terraform fmt -check terraform/modules/security/` |
+| Validação | `terraform validate` | `terraform validate terraform/modules/security/` |
+| Lint | `tflint` | `tflint --config=terraform/.tflint.hcl terraform/modules/security/` |
+| Segurança IaC | `checkov` | `checkov -d terraform/modules/security/` |
 
 ---
 
@@ -178,9 +214,10 @@ module "dev_security" {
 
 ## Lições Aprendidas
 
-Durante a implementação inicial, foi identificado um **namespace hardcoded** (`"dev"`) no módulo security, o que provocava tentativas de criação do mesmo recurso em múltiplos módulos.
+Durante a implementação inicial das NetworkPolicies (Sprint 5.2), foi identificado um **namespace hardcoded** (`"dev"`) no módulo security, o que provocava tentativas de criação do mesmo recurso em múltiplos módulos.
 
 **Correção aplicada:**
+
 ```hcl
 # Antes (incorreto)
 namespace = "dev"
@@ -189,9 +226,20 @@ namespace = "dev"
 namespace = var.namespace
 ```
 
+**Resultado:** As policies passaram a ser criadas corretamente nos namespaces DEV, HML, PROD, OBSERVABILITY e TRAEFIK.
+
 ---
 
 ## ADRs Relacionadas
 
 - **ADR-001**: Terraform como ferramenta oficial de IaC
 - **ADR-004**: Módulos reutilizáveis
+
+---
+
+## Roadmap Futuro
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 7 - GitOps Foundation** | ArgoCD, Application of Applications, Sync Policies | 📋 Planejada |
+| **Sprint 8 - Cloud Foundation AWS** | S3 Backend, DynamoDB Locking, VPC, EKS | 📋 Planejada |

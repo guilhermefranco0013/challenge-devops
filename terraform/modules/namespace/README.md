@@ -37,6 +37,14 @@ Este módulo é o bloco fundamental da plataforma — todo recurso no cluster de
 
 ---
 
+## Sprint de Implementação
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 1 - Foundation** | Criação do módulo, providers, namespaces gerenciados | ✅ Concluída |
+
+---
+
 ## Exemplo de Uso
 
 ```hcl
@@ -65,6 +73,19 @@ Este módulo é utilizado pelos seguintes environments:
 | `prod` | `prod` | `environment=prod`, `managed-by=terraform` |
 | `observability` | `observability` | `environment=observability`, `managed-by=terraform` |
 | `traefik` | `traefik` | `environment=traefik`, `managed-by=terraform` |
+
+---
+
+## Validações no Pipeline CI/CD
+
+Este módulo é validado pelo pipeline `terraform-ci.yml`:
+
+| Etapa | Ferramenta | Comando |
+|---|---|---|
+| Formatação | `terraform fmt -check` | `terraform fmt -check terraform/modules/namespace/` |
+| Validação | `terraform validate` | `terraform validate terraform/modules/namespace/` |
+| Lint | `tflint` | `tflint --config=terraform/.tflint.hcl terraform/modules/namespace/` |
+| Segurança IaC | `checkov` | `checkov -d terraform/modules/namespace/` |
 
 ---
 
@@ -97,3 +118,12 @@ Este módulo é utilizado pelos seguintes environments:
 - **ADR-001**: Terraform como ferramenta oficial de IaC
 - **ADR-004**: Módulos reutilizáveis
 - **ADR-006**: Namespaces gerenciados exclusivamente pelo Terraform
+
+---
+
+## Roadmap Futuro
+
+| Sprint | Descrição | Status |
+|---|---|---|
+| **Sprint 7 - GitOps Foundation** | ArgoCD, Application of Applications, Sync Policies | 📋 Planejada |
+| **Sprint 8 - Cloud Foundation AWS** | S3 Backend, DynamoDB Locking, VPC, EKS | 📋 Planejada |
