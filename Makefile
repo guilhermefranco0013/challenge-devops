@@ -47,16 +47,16 @@ install:
 
 lint:
 	@echo "Running Ruff and Black checks..."
-	uv run ruff check $(APP_DIR) $(APP_DIR)/tests || true
-	uv run black --check $(APP_DIR) $(APP_DIR)/tests || true
+	ruff check $(APP_DIR) $(APP_DIR)/tests || true
+	black --check $(APP_DIR) $(APP_DIR)/tests || true
 
 test:
 	@echo "Running pytest..."
-	uv run pytest $(APP_DIR)/tests -q
+	pytest $(APP_DIR)/tests -q
 
 validate:
 	@echo "Validating imports..."
-	uv run python -c "from app.main import app"
+	python -c "from app.main import app"
 	$(MAKE) test
 
 run:

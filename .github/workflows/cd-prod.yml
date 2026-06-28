@@ -81,9 +81,9 @@ jobs:
 
       - name: Verify Image Signature
         run: |
-          cosign verify \
-            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp="https://github.com/.+" \
+          cosign verify `
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com `
+            --certificate-identity-regexp="https://github.com/.+" `
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Deploy Application
