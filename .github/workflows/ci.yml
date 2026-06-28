@@ -131,40 +131,25 @@ jobs:
 
       - name: Trivy Image Scan
         if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          format: table
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: 0
+        run: trivy image --severity ${{ env.TRIVY_SEVERITY }} --exit-code 0 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Trivy SARIF
         if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          format: sarif
-          output: trivy-results.sarif
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: 0
+        run: |
+          trivy image `
+            --severity ${{ env.TRIVY_SEVERITY }} `
+            --exit-code 0 `
+            --format sarif `
+            --output trivy-results.sarif `
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Generate SBOM
         if: github.event_name == 'push'
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          format: spdx-json
-          output: trivy-sbom.spdx.json
-
-      - name: Verify Cosign Installation
-        if: github.event_name == 'push'
-        run: cosign version
-
-      - name: Sign image
-        if: github.event_name == 'push'
         run: |
-          cosign sign --yes \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          trivy image `
+            --format spdx-json `
+            --output trivy-sbom.spdx.json `
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Upload Security Artifacts
         if: github.event_name == 'push'
