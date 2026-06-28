@@ -38,9 +38,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          clean: true
 
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
+      - name: Verify Helm Installation
+        run: helm version --short
 
       - name: Helm Lint
         run: |
@@ -55,8 +57,8 @@ jobs:
             -f ${{ env.VALUES_BASE_FILE }} \
             -f ${{ env.VALUES_ENV_FILE }}
 
-      - name: Setup Kubectl
-        uses: azure/setup-kubectl@v4
+      - name: Verify Kubectl Installation
+        run: kubectl version --client --short
 
       - name: Verify Cluster Access
         run: |

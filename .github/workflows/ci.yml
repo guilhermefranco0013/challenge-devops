@@ -36,6 +36,9 @@ jobs:
       IMAGE_NAME: ${{ github.repository_owner }}/challenge-devops
       IMAGE_TAG: ${{ github.sha }}
       TRIVY_SEVERITY: HIGH,CRITICAL
+      # Fix para erro UV_HANDLE_CLOSING no Windows
+      UV_NO_CACHE: "1"
+      UV_CONCURRENT_DOWNLOADS: "1"
 
     steps:
       - name: Checkout repository
@@ -51,8 +54,8 @@ jobs:
       # Executa em push e pull request
       - name: Install dependencies with UV
         run: |
-          uv sync
-          uv pip install ruff==0.12.0 black==25.1.0 isort==5.13.0
+          uv sync --no-cache
+          uv pip install --no-cache ruff==0.12.0 black==25.1.0 isort==5.13.0
 
       - name: Ruff
         run: uv run ruff check app app/tests
