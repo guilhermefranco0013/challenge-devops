@@ -42,7 +42,8 @@ help:
 
 install:
 	@echo "Installing Python dependencies with uv..."
-	uv sync
+	uv venv
+	uv pip install -r $(REQUIREMENTS)
 	uv pip install $(DEV_PACKAGES)
 
 lint:
