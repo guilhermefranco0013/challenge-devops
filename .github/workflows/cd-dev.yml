@@ -81,18 +81,19 @@ jobs:
             --set image.tag=${{ env.IMAGE_TAG }} `
             --set image.pullPolicy=Always `
             --wait `
-            --timeout 15m `
+            --timeout 30m `
             --debug
 
       - name: Wait for Rollout
         run: |
           kubectl rollout status deployment/${{ env.RELEASE_NAME }} `
             -n ${{ env.NAMESPACE }} `
-            --timeout=300s
+            --timeout=600s
 
       - name: Validate Pods
         run: |
-          kubectl get pods -n ${{ env.NAMESPACE }}
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+          kubectl describe pod -l app.kubernetes.io/name=${{ env.RELEASE_NAME }} -n ${{ env.NAMESPACE }} || true
           kubectl get svc -n ${{ env.NAMESPACE }}
 
       - name: Health Check
