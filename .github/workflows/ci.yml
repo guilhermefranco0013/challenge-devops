@@ -82,26 +82,6 @@ jobs:
       - name: Run tests
         run: uv run pytest -x -q
 
-      # ── Trivy Filesystem (Pull Request) ────────────────
-      # Escaneia o código fonte para expor vulnerabilidades
-      # durante a revisão sem construir imagem Docker
-      - name: Trivy Filesystem Scan (PR)
-        if: github.event_name == 'pull_request'
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-fs-results.sarif
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: 0
-
-      - name: Upload Trivy FS SARIF (PR)
-        if: github.event_name == 'pull_request'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-fs-results.sarif
-
       # ── Docker Build & Security (Push to develop) ──────
       # Build da imagem única, scan, SBOM e assinatura.
       # Executa APENAS em push para develop — não em PR.
@@ -129,39 +109,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trivy Image Scan
-        if: github.event_name == 'push'
-        run: trivy image --severity ${{ env.TRIVY_SEVERITY }} --exit-code 0 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-
-      - name: Trivy SARIF
-        if: github.event_name == 'push'
-        run: |
-          trivy image `
-            --severity ${{ env.TRIVY_SEVERITY }} `
-            --exit-code 0 `
-            --format sarif `
-            --output trivy-results.sarif `
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-
-      - name: Generate SBOM
-        if: github.event_name == 'push'
-        run: |
-          trivy image `
-            --format spdx-json `
-            --output trivy-sbom.spdx.json `
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-
       - name: Upload Security Artifacts
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-security-artifacts
+          name: docker-build-info
           path: |
-            trivy-results.sarif
-            trivy-sbom.spdx.json
-
-      - name: Upload SARIF
-        if: github.event_name == 'push'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-results.sarif
+            build-metadata.json
