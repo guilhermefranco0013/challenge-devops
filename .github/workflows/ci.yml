@@ -45,17 +45,24 @@ jobs:
         uses: actions/checkout@v4
 
       # ── Setup UV (Python Package Manager) ──────────────
-      - name: Setup UV
-        uses: astral-sh/setup-uv@v4
-        with:
-          python-version: "3.12"
+      - name: Install UV
+        run: |
+          # Limpar cache antigo do uv se existir
+          if (Test-Path "$env:USERPROFILE\.cache\uv") {
+            Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\uv" -ErrorAction SilentlyContinue
+          }
+          # Instalar uv via script oficial
+          Invoke-WebRequest -Uri "https://astral.sh/uv/install.ps1" -UseBasicParsing | Invoke-Expression
+          # Adicionar ao PATH
+          $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+          uv --version
 
       # ── Code Quality & Testing ─────────────────────────
       # Executa em push e pull request
       - name: Install dependencies with UV
         run: |
-          uv sync --no-cache
-          uv pip install --no-cache ruff==0.12.0 black==25.1.0 isort==5.13.0
+          uv sync
+          uv pip install ruff==0.12.0 black==25.1.0 isort==5.13.0
 
       - name: Ruff
         run: uv run ruff check app app/tests

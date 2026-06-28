@@ -44,15 +44,15 @@ jobs:
 
       - name: Helm Lint
         run: |
-          helm lint deploy/helm/challenge-devops \
-            -f ${{ env.VALUES_BASE_FILE }} \
+          helm lint deploy/helm/challenge-devops `
+            -f ${{ env.VALUES_BASE_FILE }} `
             -f ${{ env.VALUES_ENV_FILE }}
 
       - name: Helm Template Validation
         run: |
-          helm template ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops \
-            --namespace ${{ env.NAMESPACE }} \
-            -f ${{ env.VALUES_BASE_FILE }} \
+          helm template ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops `
+            --namespace ${{ env.NAMESPACE }} `
+            -f ${{ env.VALUES_BASE_FILE }} `
             -f ${{ env.VALUES_ENV_FILE }}
 
       - name: Verify Kubectl Installation
@@ -86,21 +86,21 @@ jobs:
 
       - name: Deploy Application
         run: |
-          helm upgrade --install ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops \
-            --namespace ${{ env.NAMESPACE }} \
-            --create-namespace \
-            -f ${{ env.VALUES_BASE_FILE }} \
-            -f ${{ env.VALUES_ENV_FILE }} \
-            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set image.tag=${{ env.IMAGE_TAG }} \
-            --set image.pullPolicy=Always \
-            --wait \
+          helm upgrade --install ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops `
+            --namespace ${{ env.NAMESPACE }} `
+            --create-namespace `
+            -f ${{ env.VALUES_BASE_FILE }} `
+            -f ${{ env.VALUES_ENV_FILE }} `
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} `
+            --set image.tag=${{ env.IMAGE_TAG }} `
+            --set image.pullPolicy=Always `
+            --wait `
             --timeout 15m
 
       - name: Wait for Rollout
         run: |
-          kubectl rollout status deployment/${{ env.RELEASE_NAME }} \
-            -n ${{ env.NAMESPACE }} \
+          kubectl rollout status deployment/${{ env.RELEASE_NAME }} `
+            -n ${{ env.NAMESPACE }} `
             --timeout=300s
 
       - name: Show deployment status
