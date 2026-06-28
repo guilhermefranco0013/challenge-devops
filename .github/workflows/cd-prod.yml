@@ -58,7 +58,7 @@ jobs:
             -f ${{ env.VALUES_ENV_FILE }}
 
       - name: Verify Kubectl Installation
-        run: kubectl version --client --short
+        run: kubectl version --client
 
       - name: Verify Cluster Access
         run: |
