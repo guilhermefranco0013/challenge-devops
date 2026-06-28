@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   deploy-dev:
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     environment: dev
 

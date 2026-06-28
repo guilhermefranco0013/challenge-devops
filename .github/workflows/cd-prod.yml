@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   deploy-prod:
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     environment:
       name: prod

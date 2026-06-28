@@ -29,7 +29,7 @@ permissions:
 jobs:
   plan:
     name: Plan
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     strategy:
       matrix:

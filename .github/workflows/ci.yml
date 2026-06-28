@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   quality-security-build:
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     env:
       REGISTRY: ghcr.io
