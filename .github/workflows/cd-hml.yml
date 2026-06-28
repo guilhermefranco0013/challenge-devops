@@ -70,7 +70,7 @@ jobs:
 
       - name:  Verify image exists
         run: |
-          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} > /dev/null
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} > $null
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
@@ -108,16 +108,16 @@ jobs:
 
       - name: Health Check
         run: |
-          kubectl port-forward svc/${{ env.RELEASE_NAME }}-service \
-            18081:80 \
-            -n ${{ env.NAMESPACE }} > /tmp/pf.log 2>&1 &
+          kubectl port-forward svc/${{ env.RELEASE_NAME }}-service `
+            18081:80 `
+            -n ${{ env.NAMESPACE }} > $env:TEMP\pf.log 2>&1 &
 
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:18081/health; then
+          for ($i = 1; $i -le 30; $i++) {
+            if (curl -fsS http://127.0.0.1:18081/health) {
               exit 0
-            fi
-            sleep 5
-          done
+            }
+            Start-Sleep -Seconds 5
+          }
 
           exit 1
 

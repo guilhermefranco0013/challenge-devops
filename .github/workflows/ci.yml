@@ -55,34 +55,34 @@ jobs:
 
       - name: Install dependencies
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           python -m pip install --upgrade pip
           pip install -r app/requirements.txt
           pip install ruff==0.12.0 black==25.1.0 isort==5.13.0 pytest
 
       - name: Ruff
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           ruff check app app/tests
 
       - name: Black
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           black --check app app/tests
 
       - name: Isort
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           isort --check-only app app/tests
 
       - name: Validate imports
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           python -c "from app.main import app"
 
       - name: Run tests
         run: |
-          . .venv/bin/activate
+          .venv\Scripts\activate
           pytest -x -q
 
       # ── Trivy Filesystem (Pull Request) ────────────────

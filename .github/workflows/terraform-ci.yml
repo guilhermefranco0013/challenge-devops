@@ -72,12 +72,9 @@ jobs:
         env:
           TF_VAR_ghcr_username: ${{ secrets.GHCR_USERNAME }}
           TF_VAR_ghcr_password: ${{ secrets.GHCR_PASSWORD }}
-          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
   lint:
     name: Lint
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     steps:
       - name: Checkout repository
@@ -105,7 +102,7 @@ jobs:
 
   security:
     name: Security
-    runs-on: [self-hosted, Linux, X64, kind, devops]
+    runs-on: [self-hosted, Windows, X64, kind, devops]
 
     steps:
       - name: Checkout repository

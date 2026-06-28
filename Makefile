@@ -44,7 +44,7 @@ help:
 venv:
 	@echo "Creating virtual environment in $(VENV)..."
 	$(PYTHON) -m venv $(VENV)
-	@echo "Activate it with: source $(VENV_BIN)/activate"
+	@echo "Activate it with: $(VENV_BIN)/activate"
 
 install: deps
 
@@ -74,7 +74,7 @@ run:
 
 clean:
 	@echo "Cleaning Python cache and temporary files..."
-	find . -type d -name "__pycache__" -prune -exec rm -rf {} + || true
+	powershell -Command "Get-ChildItem -Path . -Recurse -Filter __pycache__ -Directory | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
 	rm -rf .pytest_cache .ruff_cache $(APP_DIR)/.pytest_cache $(APP_DIR)/.ruff_cache
 
 # ─── Terraform (Sprint 6 - CI/CD) ──────────────────────────────────────────────
