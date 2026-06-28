@@ -74,8 +74,8 @@ jobs:
         run: |
           docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} > $null
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+      - name: Verify Cosign Installation
+        run: cosign version
 
       - name: Verify Image Signature
         run: |

@@ -64,12 +64,12 @@ jobs:
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-         registry: ghcr.io
-         username: ${{ github.actor }}
-         password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+      - name: Verify Cosign Installation
+        run: cosign version
 
       - name: Verify Image Signature
         run: |

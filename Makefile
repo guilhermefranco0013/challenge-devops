@@ -42,8 +42,8 @@ help:
 
 install:
 	@echo "Installing Python dependencies with uv..."
-	uv pip install -r $(REQUIREMENTS)
-	uv pip install $(DEV_PACKAGES)
+	uv pip install --system -r $(REQUIREMENTS)
+	uv pip install --system $(DEV_PACKAGES)
 
 lint:
 	@echo "Running Ruff and Black checks..."
