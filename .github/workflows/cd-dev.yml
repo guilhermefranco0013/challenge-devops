@@ -70,6 +70,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pre-Deploy Debug
+        run: |
+          echo "=== Checking if image exists ==="
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || echo "Image not found locally"
+          
+          echo "=== Current namespace status ==="
+          kubectl get all -n ${{ env.NAMESPACE }} || echo "Namespace does not exist yet"
+
       - name: Deploy Application
         run: |
           helm upgrade --install ${{ env.RELEASE_NAME }} deploy/helm/challenge-devops `
@@ -83,6 +91,20 @@ jobs:
             --wait `
             --timeout 30m `
             --debug
+
+      - name: Post-Deploy Debug
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+          
+          echo "=== Pod Events ==="
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -20
+          
+          echo "=== Failed Pod Details ==="
+          kubectl get pods -n ${{ env.NAMESPACE }} -o json | jq '.items[] | select(.status.phase=="Failed")' || kubectl get pods -n ${{ env.NAMESPACE }} -o json
+          
+          echo "=== Deployment Status ==="
+          kubectl describe deployment ${{ env.RELEASE_NAME }} -n ${{ env.NAMESPACE }}
 
       - name: Wait for Rollout
         run: |
